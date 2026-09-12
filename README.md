@@ -58,6 +58,7 @@ Project Attendance/
 ├── package.json
 ├── README.md
 └── tsconfig.json
+```
 
 ## Panduan Instalasi
 
