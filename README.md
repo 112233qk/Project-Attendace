@@ -37,29 +37,28 @@ Sistem ini memiliki 4 tabel utama:
 
 ## Struktur Direktori Proyek
 
+```text
 Project Attendance/
 ├── node_modules/
-|
 ├── prisma/
-│ ├── migrations/
-│ └── schema.prisma
-|
+│   ├── migrations/
+│   └── schema.prisma
 ├── src/
-│ ├── config/
-│ ├── controllers/
-│ ├── middlewares/
-│ ├── routes/
-│ ├── util/
-│ └── index.ts
-|
+│   ├── config/
+│   ├── controllers/
+│   ├── middlewares/
+│   ├── routes/
+│   ├── utils/
+│   └── index.ts
 ├── .env
 ├── .gitignore
 ├── INSTALLATION.md
 ├── LICENSE
-├── package.json
 ├── package-lock.json
+├── package.json
 ├── README.md
 └── tsconfig.json
+```
 
 ## Panduan Instalasi
 
