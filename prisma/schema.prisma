@@ -60,8 +60,11 @@ model Attendance {
   latMasuk    Float?   @map("lat_masuk")
   lngMasuk    Float?   @map("lng_masuk")
   fotoMasuk   String?  @map("foto_masuk") @db.VarChar(255)
-  statusMasuk String?  @map("status_masuk") @db.VarChar(50) // Misal: TEPAT_WAKTU / TERLAMBAT
-  metodeMasuk String?  @map("metode_masuk") @db.VarChar(50) // Misal: GPS / QR_CODE
+  latPulang   Float?   @map("lat_pulang")     
+  lngPulang   Float?   @map("lng_pulang")     
+  fotoPulang  String?  @map("foto_pulang") @db.VarChar(255) 
+  statusMasuk String?  @map("status_masuk") @db.VarChar(50)
+  metodeMasuk String?  @map("metode_masuk") @db.VarChar(50)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

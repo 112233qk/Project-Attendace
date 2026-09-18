@@ -136,3 +136,39 @@ dist
 .pnp.*
 
 /generated/prisma
+
+# Ignore uploaded files
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment
+.env
+.env.local
+
+# Uploads (foto user)
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test files
+besar.jpg
+generate-token.js
+
+# AI Agent Skills (opsional)
+.agents/
+.claude/
+.cursor/
+.devin/
+
+# OS files
+.DS_Store
+Thumbs.db
