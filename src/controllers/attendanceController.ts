@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { getDistanceInMeters } from "../utils/haversine";
+import { StatusMasuk } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -102,7 +103,9 @@ export const checkIn = async (req: Request, res: Response) => {
     const currentTimeString =
       nowWIB.toISOString().split("T")[1]?.substring(0, 5) || "00:00";
     const statusMasuk =
-      currentTimeString > office.jamMasuk ? "TERLAMBAT" : "TEPAT_WAKTU";
+      currentTimeString > office.jamMasuk
+        ? StatusMasuk.TERLAMBAT
+        : StatusMasuk.TEPAT_WAKTU;
 
     // 3. Validasi Duplikasi Check-in
     const today = getTodayDate();

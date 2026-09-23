@@ -33,6 +33,7 @@ model User {
   email              String       @unique @db.VarChar(100)
   password           String       @db.VarChar(255)
   role               Role         @default(KARYAWAN)
+  fotoProfil         String?      @map("foto_profil") @db.VarChar(255) // ← BARU
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -50,25 +51,34 @@ enum Role {
   ADMIN
 }
 
-// 3. ATTENDANCES
-model Attendance {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  tanggal     DateTime @db.Date
-  jamMasuk    DateTime? @map("jam_masuk")
-  jamPulang   DateTime? @map("jam_pulang")
-  latMasuk    Float?   @map("lat_masuk")
-  lngMasuk    Float?   @map("lng_masuk")
-  fotoMasuk   String?  @map("foto_masuk") @db.VarChar(255)
-  latPulang   Float?   @map("lat_pulang")     
-  lngPulang   Float?   @map("lng_pulang")     
-  fotoPulang  String?  @map("foto_pulang") @db.VarChar(255) 
-  statusMasuk String?  @map("status_masuk") @db.VarChar(50)
-  metodeMasuk String?  @map("metode_masuk") @db.VarChar(50)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum StatusMasuk {
+  TEPAT_WAKTU
+  TERLAMBAT
+}
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum MetodeMasuk {
+  GPS
+  MANUAL  // fallback saat GPS gagal
+}
+
+model Attendance {
+  id          Int          @id @default(autoincrement())
+  userId      Int          @map("user_id")
+  tanggal     DateTime     @db.Date
+  jamMasuk    DateTime?    @map("jam_masuk")
+  jamPulang   DateTime?    @map("jam_pulang")
+  latMasuk    Float?       @map("lat_masuk")
+  lngMasuk    Float?       @map("lng_masuk")
+  fotoMasuk   String?      @map("foto_masuk") @db.VarChar(255)
+  latPulang   Float?       @map("lat_pulang")
+  lngPulang   Float?       @map("lng_pulang")
+  fotoPulang  String?      @map("foto_pulang") @db.VarChar(255)
+  statusMasuk StatusMasuk? @map("status_masuk")  // ← UBAH dari String ke Enum
+  metodeMasuk MetodeMasuk? @map("metode_masuk")  // ← UBAH dari String ke Enum
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("attendances")
 }
