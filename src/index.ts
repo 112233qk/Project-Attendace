@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import multer from "multer";
 import attendanceRoutes from "./routes/attendanceRoutes";
+import officeRoutes from "./routes/officeRoutes";
 // import authRoutes from './routes/authRoutes'; // (jika ada)
 
 const app = express();
@@ -15,6 +16,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 // Routes
 // app.use('/api/auth', authRoutes);
 app.use("/api/attendances", attendanceRoutes);
+app.use("/api/offices", officeRoutes);
 
 // ============================================
 // GLOBAL ERROR HANDLER (WAJIB DI PALING BAWAH)
