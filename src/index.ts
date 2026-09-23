@@ -3,6 +3,8 @@ import path from "path";
 import multer from "multer";
 import attendanceRoutes from "./routes/attendanceRoutes";
 import officeRoutes from "./routes/officeRoutes";
+import authRoutes from "./routes/authRoutes";
+import userRoutes from "./routes/userRoutes";
 // import authRoutes from './routes/authRoutes'; // (jika ada)
 
 const app = express();
@@ -14,7 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // Routes
-// app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/attendances", attendanceRoutes);
 app.use("/api/offices", officeRoutes);
 
