@@ -5,7 +5,7 @@ import attendanceRoutes from "./routes/attendanceRoutes";
 import officeRoutes from "./routes/officeRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
-// import authRoutes from './routes/authRoutes'; // (jika ada)
+import permissionRoutes from "./routes/permissionRoutes";
 
 const app = express();
 
@@ -20,6 +20,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/attendances", attendanceRoutes);
 app.use("/api/offices", officeRoutes);
+app.use("/api/permissions", permissionRoutes);
 
 // ============================================
 // GLOBAL ERROR HANDLER (WAJIB DI PALING BAWAH)
@@ -42,7 +43,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   }
 
   // Tangani error kustom dari fileFilter multer
-  if (err && err.message === "Hanya file JPG, JPEG, dan PNG yang diizinkan!") {
+  if (
+    err &&
+    (err.message === "Hanya file JPG, JPEG, dan PNG yang diizinkan!" ||
+      err.message === "Hanya file JPG, JPEG, PNG, dan PDF yang diizinkan!")
+  ) {
     return res.status(400).json({
       success: false,
       message: err.message,

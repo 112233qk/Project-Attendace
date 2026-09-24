@@ -88,20 +88,21 @@ model Attendance {
 
 // 4. PERMISSIONS
 model Permission {
-  id             Int              @id @default(autoincrement())
-  userId         Int              @map("user_id")
-  approvedBy     Int?             @map("approved_by")
-  jenis          JenisIzin
-  tanggalMulai   DateTime         @map("tanggal_mulai") @db.Date
-  tanggalSelesai DateTime         @map("tanggal_selesai") @db.Date
-  alasan         String           @db.Text
-  buktiFile      String?          @map("bukti_file") @db.VarChar(255)
-  status         StatusPermission @default(PENDING)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id              Int              @id @default(autoincrement())
+  userId          Int              @map("user_id")
+  approvedBy      Int?             @map("approved_by")
+  jenis           JenisIzin
+  tanggalMulai    DateTime         @map("tanggal_mulai") @db.Date
+  tanggalSelesai  DateTime         @map("tanggal_selesai") @db.Date
+  alasan          String           @db.Text
+  buktiFile       String?          @map("bukti_file") @db.VarChar(255)
+  status          StatusPermission @default(PENDING)
+  rejectionReason String?          @map("rejection_reason") @db.Text  // ← BARU
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  user           User             @relation("UserPermissions", fields: [userId], references: [id], onDelete: Cascade)
-  approver       User?            @relation("ApprovedPermissions", fields: [approvedBy], references: [id], onDelete: SetNull)
+  user            User             @relation("UserPermissions", fields: [userId], references: [id], onDelete: Cascade)
+  approver        User?            @relation("ApprovedPermissions", fields: [approvedBy], references: [id], onDelete: SetNull)
 
   @@map("permissions")
 }
