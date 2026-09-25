@@ -6,6 +6,7 @@ import officeRoutes from "./routes/officeRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import permissionRoutes from "./routes/permissionRoutes";
+import reportRoutes from "./routes/reportRoutes";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/attendances", attendanceRoutes);
 app.use("/api/offices", officeRoutes);
 app.use("/api/permissions", permissionRoutes);
+app.use("/api/reports", reportRoutes);
 
 // ============================================
 // GLOBAL ERROR HANDLER (WAJIB DI PALING BAWAH)
