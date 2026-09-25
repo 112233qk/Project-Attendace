@@ -150,6 +150,7 @@ dist/
 # Environment
 .env
 .env.local
+.env.test
 
 # Uploads (foto user)
 public/uploads/*
@@ -172,3 +173,6 @@ generate-token.js
 # OS files
 .DS_Store
 Thumbs.db
+
+# Test coverage
+coverage/

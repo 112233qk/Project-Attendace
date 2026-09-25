@@ -1,14 +1,14 @@
 import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import multer from "multer";
-import attendanceRoutes from "./routes/attendanceRoutes";
-import officeRoutes from "./routes/officeRoutes";
-import authRoutes from "./routes/authRoutes";
-import userRoutes from "./routes/userRoutes";
-import permissionRoutes from "./routes/permissionRoutes";
-import reportRoutes from "./routes/reportRoutes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
+import authRoutes from "./routes/authRoutes";
+import userRoutes from "./routes/userRoutes";
+import attendanceRoutes from "./routes/attendanceRoutes";
+import officeRoutes from "./routes/officeRoutes";
+import permissionRoutes from "./routes/permissionRoutes";
+import reportRoutes from "./routes/reportRoutes";
 
 const app = express();
 
@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // ============================================
-// SWAGGER UI (Dokumentasi API)
+// SWAGGER UI
 // ============================================
 app.use(
   "/api-docs",
@@ -30,7 +30,6 @@ app.use(
   })
 );
 
-// Endpoint untuk download raw OpenAPI spec (JSON)
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
@@ -47,10 +46,9 @@ app.use("/api/permissions", permissionRoutes);
 app.use("/api/reports", reportRoutes);
 
 // ============================================
-// GLOBAL ERROR HANDLER (WAJIB DI PALING BAWAH)
+// GLOBAL ERROR HANDLER
 // ============================================
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  // Tangani error dari Multer
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
@@ -66,7 +64,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
   }
 
-  // Tangani error kustom dari fileFilter multer
   if (
     err &&
     (err.message === "Hanya file JPG, JPEG, dan PNG yang diizinkan!" ||
@@ -79,7 +76,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
   }
 
-  // Tangani error umum lainnya
   console.error("Unhandled Error:", err);
   return res.status(500).json({
     success: false,
@@ -88,7 +84,4 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;

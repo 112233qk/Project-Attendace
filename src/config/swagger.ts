@@ -9,10 +9,6 @@ const projectRoot = path.join(__dirname, "../../");
 // Selalu baca dari src/docs/*.ts (karena JSDoc hilang saat compile ke dist)
 const docsPath = path.join(projectRoot, "src/docs/*.ts").replace(/\\/g, "/");
 
-console.log("🔍 __dirname:", __dirname);
-console.log("🔍 projectRoot:", projectRoot);
-console.log("🔍 docsPath:", docsPath);
-
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: "3.0.0",
