@@ -7,6 +7,8 @@ import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import permissionRoutes from "./routes/permissionRoutes";
 import reportRoutes from "./routes/reportRoutes";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 const app = express();
 
@@ -16,7 +18,27 @@ app.use(express.urlencoded({ extended: true }));
 // Static folder untuk akses foto
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
-// Routes
+// ============================================
+// SWAGGER UI (Dokumentasi API)
+// ============================================
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: "Attendance API Docs",
+    customCss: ".swagger-ui .topbar { display: none }",
+  })
+);
+
+// Endpoint untuk download raw OpenAPI spec (JSON)
+app.get("/api-docs.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
+
+// ============================================
+// ROUTES
+// ============================================
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/attendances", attendanceRoutes);
