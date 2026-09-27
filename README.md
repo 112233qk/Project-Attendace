@@ -137,132 +137,145 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 
 ## 🏗 Arsitektur Sistem
 
-Aplikasi menggunakan **Layered Architecture** untuk _separation of concerns_:
+Aplikasi menggunakan **Layered Architecture** untuk *separation of concerns*:
 
-┌─────────────────────────────────────────┐
-│ Client (Web / Mobile / Postman) │
-└──────────────────┬──────────────────────┘
-│ HTTPS
-▼
-┌─────────────────────────────────────────┐
-│ Routing Layer (Express Router) │
-├─────────────────────────────────────────┤
-│ Middleware Layer │
-│ ├─ JWT Authentication │
-│ ├─ RBAC Authorization │
-│ └─ Multer Upload │
-├─────────────────────────────────────────┤
-│ Controller Layer (Business Logic) │
-│ ├─ Haversine Calculation │
-│ ├─ Validation │
-│ └─ Audit Logging │
-├─────────────────────────────────────────┤
-│ Data Access Layer (Prisma ORM) │
-└──────────────────┬──────────────────────┘
-│
-▼
-┌─────────────────────────────────────────┐
-│ MySQL Database │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    Client["🖥️ Client<br/>(Web / Mobile / Postman)"]
+    Routing["🔀 Routing Layer<br/>(Express Router)"]
+    Middleware["🛡️ Middleware Layer<br/>JWT Auth • RBAC • Multer Upload"]
+    Controller["⚙️ Controller Layer<br/>Business Logic • Haversine<br/>Validation • Audit Logging"]
+    Data["🗄️ Data Access Layer<br/>(Prisma ORM)"]
+    DB[("💾 MySQL Database")]
 
----
+    Client -->|HTTPS| Routing
+    Routing --> Middleware
+    Middleware --> Controller
+    Controller --> Data
+    Data --> DB
 
+    style Client fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Routing fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style Middleware fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style Controller fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style Data fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style DB fill:#eceff1,stroke:#455a64,stroke-width:2px
+```
 ## 🗄 Struktur Database
 
 Sistem mengelola **5 entitas utama**:
 
-### 1. `offices`
+```mermaid
+erDiagram
+    OFFICES ||--o{ USERS : "has"
+    USERS ||--o{ ATTENDANCES : "records"
+    USERS ||--o{ PERMISSIONS : "requests"
+    USERS ||--o{ AUDIT_LOGS : "performs"
+    USERS ||--o{ PERMISSIONS : "approves"
 
-Menyimpan data kantor: nama, koordinat (lat/lng), radius aman, jam kerja.
+    OFFICES {
+        int id PK
+        string name
+        float latitude
+        float longitude
+        float radius
+        string jam_masuk
+        string jam_pulang
+    }
+    USERS {
+        int id PK
+        int office_id FK
+        string nik
+        string nama
+        string email
+        string password
+        enum role
+        bool is_active
+    }
+    ATTENDANCES {
+        int id PK
+        int user_id FK
+        date tanggal
+        datetime jam_masuk
+        datetime jam_pulang
+        enum status_masuk
+    }
+    PERMISSIONS {
+        int id PK
+        int user_id FK
+        int approved_by FK
+        enum jenis
+        date tanggal_mulai
+        date tanggal_selesai
+        enum status
+    }
+    AUDIT_LOGS {
+        int id PK
+        int user_id FK
+        string action
+        string entity
+        json old_value
+        json new_value
+    }
+```
 
-### 2. `users`
+**Deskripsi singkat:**
+- **`offices`** — Data kantor: koordinat, radius, jam kerja.
+- **`users`** — Karyawan & staff (role: KARYAWAN/HRD/ADMIN).
+- **`attendances`** — Catatan absensi harian.
+- **`permissions`** — Pengajuan izin/sakit/cuti.
+- **`audit_logs`** — Audit trail semua aktivitas penting.
 
-Data pengguna: NIK, nama, email, password (hashed), role, officeId, fotoProfil, isActive.
-
-### 3. `attendances`
-
-Catatan absensi harian: userId, tanggal, jamMasuk/Pulang, koordinat, foto, status, metode.
-
-### 4. `permissions`
-
-Pengajuan izin/sakit/cuti: userId, jenis, tanggal, alasan, bukti, status, approvedBy, rejectionReason.
-
-### 5. `audit_logs`
-
-Audit trail: userId, action, entity, oldValue, newValue, description, ipAddress, userAgent.
-
-> 📌 Skema lengkap tersedia di [`prisma/schema.prisma`](prisma/schema.prisma).
-
----
-
+> 📌 Skema lengkap: [`prisma/schema.prisma`](prisma/schema.prisma)
 ## 📂 Struktur Direktori
 
+<details>
+<summary>Klik untuk melihat struktur folder lengkap</summary>
+
+```
 project-attendance/
 ├── prisma/
-│ ├── migrations/ # Riwayat migrasi database
-│ └── schema.prisma # Skema database
+│   ├── migrations/          # Riwayat migrasi database
+│   └── schema.prisma        # Skema database
 ├── public/
-│ └── uploads/ # File upload user (foto absensi, bukti izin)
+│   └── uploads/             # File upload user
 ├── src/
-│ ├── config/
-│ │ ├── multer.ts # Konfigurasi upload foto absensi
-│ │ ├── multerPermission.ts # Konfigurasi upload bukti izin
-│ │ └── swagger.ts # Konfigurasi Swagger
-│ ├── controllers/ # Business logic per modul
-│ │ ├── authController.ts
-│ │ ├── userController.ts
-│ │ ├── officeController.ts
-│ │ ├── attendanceController.ts
-│ │ ├── permissionController.ts
-│ │ └── reportController.ts
-│ ├── docs/ # Anotasi Swagger (JSDoc)
-│ │ ├── auth.docs.ts
-│ │ ├── users.docs.ts
-│ │ ├── offices.docs.ts
-│ │ ├── attendances.docs.ts
-│ │ ├── permissions.docs.ts
-│ │ └── reports.docs.ts
-│ ├── middlewares/
-│ │ └── authMiddleware.ts # JWT + RBAC
-│ ├── routes/ # Definisi endpoint
-│ │ ├── authRoutes.ts
-│ │ ├── userRoutes.ts
-│ │ ├── officeRoutes.ts
-│ │ ├── attendanceRoutes.ts
-│ │ ├── permissionRoutes.ts
-│ │ └── reportRoutes.ts
-│ ├── types/
-│ │ └── express/
-│ │ └── index.d.ts # Deklarasi tipe req.user
-│ ├── utils/
-│ │ ├── haversine.ts # Hitung jarak antar koordinat
-│ │ ├── auditLogger.ts # Helper audit log
-│ │ ├── pdfGenerator.ts # Generate PDF laporan
-│ │ └── excelGenerator.ts # Generate Excel laporan
-│ ├── app.ts # Setup Express app (export)
-│ └── server.ts # Entry point (listen)
+│   ├── config/
+│   │   ├── multer.ts        # Upload foto absensi
+│   │   ├── multerPermission.ts
+│   │   └── swagger.ts
+│   ├── controllers/
+│   │   ├── authController.ts
+│   │   ├── userController.ts
+│   │   ├── officeController.ts
+│   │   ├── attendanceController.ts
+│   │   ├── permissionController.ts
+│   │   └── reportController.ts
+│   ├── docs/                # Anotasi Swagger
+│   ├── middlewares/
+│   │   └── authMiddleware.ts
+│   ├── routes/
+│   ├── types/
+│   │   └── express/
+│   │       └── index.d.ts
+│   ├── utils/
+│   │   ├── haversine.ts
+│   │   ├── auditLogger.ts
+│   │   ├── pdfGenerator.ts
+│   │   └── excelGenerator.ts
+│   ├── app.ts               # Setup Express app
+│   └── server.ts            # Entry point
 ├── tests/
-│ ├── setup.ts # Setup global Jest
-│ ├── helpers/
-│ │ ├── authHelper.ts # Generate token untuk test
-│ │ └── dbHelper.ts # Reset & seed DB
-│ ├── fixtures/
-│ │ └── sample.jpg # Fixture upload
-│ ├── auth.test.ts
-│ ├── users.test.ts
-│ ├── offices.test.ts
-│ ├── attendances.test.ts
-│ ├── permissions.test.ts
-│ └── reports.test.ts
-├── .env # Environment variables (JANGAN commit)
-├── .env.test # Environment untuk testing (JANGAN commit)
-├── .gitignore
+│   ├── helpers/
+│   ├── fixtures/
+│   └── *.test.ts
+├── .env
+├── .env.test
 ├── package.json
-├── tsconfig.json
 └── README.md
+```
 
----
-
+</details>
 ## ⚙️ Instalasi
 
 ### Prasyarat
