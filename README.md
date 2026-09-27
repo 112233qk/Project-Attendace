@@ -476,7 +476,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ## 📄 Lisensi
 
-Proyek ini menggunakan lisensi **MIT**. Lihat file [LICENSE](LICENSE) untuk detail.
+Proyek ini menggunakan lisensi **ISC**. Lihat file [LICENSE](LICENSE) untuk detail.
 
 ---
 
