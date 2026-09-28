@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
 import path from "path";
 import multer from "multer";
 import swaggerUi from "swagger-ui-express";
@@ -11,6 +12,40 @@ import permissionRoutes from "./routes/permissionRoutes";
 import reportRoutes from "./routes/reportRoutes";
 
 const app = express();
+
+// ============================================
+// CORS CONFIGURATION
+// ============================================
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim());
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Izinkan request tanpa origin (Postman, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Izinkan origin yang ada di whitelist
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS: Origin ${origin} tidak diizinkan.`));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Disposition"],
+    maxAge: 86400, // Cache preflight 24 jam
+  })
+);
+
+// ============================================
+// BODY PARSER
+// ============================================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
