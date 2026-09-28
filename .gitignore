@@ -151,6 +151,7 @@ dist/
 .env
 .env.local
 .env.test
+.env.production
 
 # Uploads (foto user)
 public/uploads/*
