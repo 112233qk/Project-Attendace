@@ -10,6 +10,7 @@ import attendanceRoutes from "./routes/attendanceRoutes";
 import officeRoutes from "./routes/officeRoutes";
 import permissionRoutes from "./routes/permissionRoutes";
 import reportRoutes from "./routes/reportRoutes";
+import seedRoutes from "./routes/seedRoutes";
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.use("/api/attendances", attendanceRoutes);
 app.use("/api/offices", officeRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/seed", seedRoutes);
 
 // ============================================
 // GLOBAL ERROR HANDLER
