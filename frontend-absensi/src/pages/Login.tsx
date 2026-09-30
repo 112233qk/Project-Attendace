@@ -1,130 +1,91 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import api from "../lib/api";
 
-// Interface berdasarkan API_CONTRACT.md[cite: 1]
-interface LoginResponse {
-  success: boolean;
-  message: string;
-  data: {
-    token: string;
-    user: {
-      id: number;
-      nik: string;
-      nama: string;
-      email: string;
-      role: string;
-      officeId: number;
-    };
-  };
-}
-
 export default function Login() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-  const [errorMsg, setErrorMsg] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const onSubmit = async (data: any) => {
-    setIsLoading(true);
-    setErrorMsg("");
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
-      const response = await api.post<LoginResponse>("/api/auth/login", data); //[cite: 1]
-
-      if (response.data.success) {
-        //[cite: 1]
-        // Simpan token dan info user[cite: 1]
-        localStorage.setItem("token", response.data.data.token); //[cite: 1]
-        localStorage.setItem("user", JSON.stringify(response.data.data.user)); //[cite: 1]
-
-        // Redirect berdasarkan role
-        const role = response.data.data.user.role; //[cite: 1]
-        if (role === "KARYAWAN") navigate("/dashboard"); //[cite: 1]
-        else if (role === "HRD") navigate("/hrd"); //[cite: 1]
-        else if (role === "ADMIN") navigate("/admin"); //[cite: 1]
+      const response = await api.post("/auth/login", { email, password });
+      localStorage.setItem("token", response.data.token);
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      if (isAxiosError(err)) {
+        setError(
+          err.response?.data?.message ||
+            "Gagal masuk. Periksa email dan password Anda."
+        );
+      } else {
+        setError("Terjadi kesalahan pada sistem.");
       }
-    } catch (err: any) {
-      // Handle error berdasarkan format API: { success: false, message: "..." }[cite: 1]
-      setErrorMsg(
-        err.response?.data?.message || "Terjadi kesalahan pada server"
-      ); //[cite: 1]
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md bg-surface p-8 rounded-2xl shadow-2xl border border-slate-800">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
-            Login Portal
-          </h1>
-          <p className="text-slate-400">Sistem Absensi Karyawan</p>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-md p-8 space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Selamat Datang</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Silakan masuk ke akun Anda
+          </p>
         </div>
 
-        {errorMsg && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
-            {errorMsg}
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+            {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <input
               type="email"
-              placeholder="Ketik email Anda"
-              {...register("email", { required: "Email wajib diisi" })}
-              className="w-full px-4 py-3 bg-background border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-white placeholder-slate-500"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="nama@perusahaan.com"
             />
-            {errors.email && (
-              <span className="text-red-400 text-xs mt-1 block">
-                {errors.email.message as string}
-              </span>
-            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Password
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Kata Sandi
             </label>
             <input
               type="password"
-              placeholder="Ketik password Anda"
-              {...register("password", { required: "Password wajib diisi" })}
-              className="w-full px-4 py-3 bg-background border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-white placeholder-slate-500"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="••••••••"
             />
-            {errors.password && (
-              <span className="text-red-400 text-xs mt-1 block">
-                {errors.password.message as string}
-              </span>
-            )}
           </div>
 
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full py-3 px-4 bg-primary hover:bg-primaryHover text-white font-semibold rounded-lg shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+            disabled={loading}
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
-            {isLoading ? (
-              <span className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></span>
-            ) : (
-              "Masuk"
-            )}
+            {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-xs text-slate-500">
-          Gunakan kredensial testing: admin@test.com / admin123
-        </div>
       </div>
     </div>
   );
