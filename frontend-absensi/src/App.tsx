@@ -1,21 +1,25 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import DashboardKaryawan from "./pages/DashboardKaryawan";
+import RiwayatPresensi from "./pages/RiwayatPresensi";
+import DashboardAdmin from "./pages/DashboardAdmin"; // Import Admin
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Redirect dari root / ke /login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* Route Login */}
         <Route path="/login" element={<Login />} />
 
-        {/* Route Dashboard Karyawan */}
-        <Route path="/dashboard" element={<DashboardKaryawan />} />
+        {/* Route Terproteksi (Harus Login) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardKaryawan />} />
+          <Route path="/riwayat" element={<RiwayatPresensi />} />
+          <Route path="/admin" element={<DashboardAdmin />} />{" "}
+          {/* Tambahkan ini */}
+        </Route>
 
-        {/* Catch-all route jika URL tidak ditemukan */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
