@@ -1,0 +1,4 @@
+frontend-absensi/
+tests/
+coverage/
+*.md
