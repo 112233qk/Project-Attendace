@@ -29,13 +29,22 @@ const options: swaggerJsdoc.Options = {
       },
     },
     servers: [
-      {
-        url: process.env.BASE_URL || "http://localhost:3000",
-        description:
-          process.env.NODE_ENV === "production"
-            ? "Production Server"
-            : "Development Server",
-      },
+      // Production (Railway) — deteksi otomatis dari env NODE_ENV
+      ...(process.env.NODE_ENV === "production"
+        ? [
+            {
+              url:
+                process.env.BASE_URL ||
+                "https://project-attendace-production.up.railway.app",
+              description: "Production Server (Railway)",
+            },
+          ]
+        : [
+            {
+              url: `http://localhost:${process.env.PORT || 3000}`,
+              description: "Development Server (Local)",
+            },
+          ]),
     ],
     components: {
       securitySchemes: {
