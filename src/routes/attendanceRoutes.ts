@@ -3,6 +3,7 @@ import {
   checkIn,
   checkOut,
   getAttendanceHistory,
+  getTodayAttendance,
 } from "../controllers/attendanceController";
 import { authenticate, authorize } from "../middlewares/authMiddleware";
 import { upload } from "../config/multer";
@@ -19,6 +20,15 @@ router.post("/check-in", upload.single("fotoMasuk"), checkIn);
 router.post("/check-out", upload.single("fotoPulang"), checkOut);
 
 // Endpoint Riwayat Absensi
+router.get(
+  "/history",
+  authorize("KARYAWAN", "HRD", "ADMIN"),
+  getAttendanceHistory
+);
+
+// Endpoint: Cek status presensi hari ini (Karyawan)
+router.get("/today", authorize("KARYAWAN"), getTodayAttendance);
+
 router.get(
   "/history",
   authorize("KARYAWAN", "HRD", "ADMIN"),

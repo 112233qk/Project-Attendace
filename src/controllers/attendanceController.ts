@@ -280,3 +280,51 @@ export const getAttendanceHistory = async (req: Request, res: Response) => {
     );
   }
 };
+
+// 4. GET TODAY ATTENDANCE STATUS (untuk Karyawan cek status hari ini)
+export const getTodayAttendance = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const today = getTodayDate();
+
+    const attendance = await prisma.attendance.findFirst({
+      where: { userId, tanggal: today },
+    });
+
+    // Format jam ke HH:mm:ss
+    const formatTime = (date: Date | null | undefined): string | null => {
+      if (!date) return null;
+      const wib = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+      const h = String(wib.getUTCHours()).padStart(2, "0");
+      const m = String(wib.getUTCMinutes()).padStart(2, "0");
+      const s = String(wib.getUTCSeconds()).padStart(2, "0");
+      return `${h}:${m}:${s}`;
+    };
+
+    if (!attendance) {
+      return sendResponse(res, 200, true, "Belum ada presensi hari ini.", {
+        hasCheckedIn: false,
+        hasCheckedOut: false,
+        checkInTime: null,
+        checkOutTime: null,
+        attendance: null,
+      });
+    }
+
+    return sendResponse(res, 200, true, "Status presensi hari ini.", {
+      hasCheckedIn: !!attendance.jamMasuk,
+      hasCheckedOut: !!attendance.jamPulang,
+      checkInTime: formatTime(attendance.jamMasuk),
+      checkOutTime: formatTime(attendance.jamPulang),
+      attendance,
+    });
+  } catch (error: any) {
+    console.error("Get Today Attendance Error:", error);
+    return sendResponse(
+      res,
+      500,
+      false,
+      error.message || "Terjadi kesalahan pada server."
+    );
+  }
+};

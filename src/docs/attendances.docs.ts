@@ -190,4 +190,43 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 
+/**
+ * @openapi
+ * /api/attendances/today:
+ *   get:
+ *     tags:
+ *       - Attendances
+ *     summary: Status presensi hari ini (Karyawan)
+ *     description: |
+ *       Mendapatkan status presensi user yang login **hari ini**.
+ *       Berguna untuk menampilkan tombol Check-in/Check-out yang tepat.
+ *
+ *       **RBAC:** Karyawan only.
+ *     responses:
+ *       200:
+ *         description: Status presensi hari ini
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 message: { type: string, example: 'Status presensi hari ini.' }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     hasCheckedIn: { type: boolean, example: true }
+ *                     hasCheckedOut: { type: boolean, example: false }
+ *                     checkInTime: { type: string, nullable: true, example: '08:15:30' }
+ *                     checkOutTime: { type: string, nullable: true, example: null }
+ *                     attendance:
+ *                       type: object
+ *                       nullable: true
+ *       403:
+ *         description: Bukan Karyawan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 export {};
