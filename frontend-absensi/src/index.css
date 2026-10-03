@@ -1,1 +1,63 @@
 @import "tailwindcss";
+
+@theme {
+  /* Warna Aridev Studio */
+  --color-ink: #07111f;
+  --color-ink-2: #101c2f;
+  --color-ink-3: #24324a;
+  --color-muted: #68758a;
+  --color-line: #dfe5ee;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f4f7fb;
+  --color-surface-blue: #eef4ff;
+  --color-blue: #2864ff;
+  --color-blue-2: #5b8cff;
+  --color-blue-dark: #1645cf;
+  --color-violet: #7857ff;
+  --color-green: #19a974;
+
+  /* Font */
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Manrope", sans-serif;
+
+  /* Radius */
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 32px;
+}
+
+/* Base Styles */
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f3f8;
+}
+::-webkit-scrollbar-thumb {
+  background: #a7b4c9;
+  border-radius: 999px;
+}
+
+::selection {
+  background: rgba(40, 100, 255, 0.2);
+  color: var(--color-ink);
+}

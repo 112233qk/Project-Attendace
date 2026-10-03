@@ -3,12 +3,39 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 
 interface AttendanceRecord {
-  id: string;
-  date: string;
-  checkIn: string;
-  checkOut: string | null;
-  status: string;
+  id: number;
+  userId: number;
+  tanggal: string;
+  jamMasuk: string | null;
+  jamPulang: string | null;
+  statusMasuk: string | null;
+  metodeMasuk: string | null;
+  user?: {
+    nama: string;
+    nik: string;
+    email: string;
+  };
 }
+
+// Format tanggal: "2026-09-29T00:00:00.000Z" → "29-09-2026"
+const formatDate = (iso: string): string => {
+  const d = new Date(iso);
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+// Format jam: "2026-09-29T01:15:30.000Z" → "08:15:30" (WIB)
+const formatTime = (iso: string | null): string => {
+  if (!iso) return "--:--:--";
+  const d = new Date(iso);
+  const wib = new Date(d.getTime() + 7 * 60 * 60 * 1000);
+  const h = String(wib.getUTCHours()).padStart(2, "0");
+  const m = String(wib.getUTCMinutes()).padStart(2, "0");
+  const s = String(wib.getUTCSeconds()).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+};
 
 export default function RiwayatPresensi() {
   const navigate = useNavigate();
@@ -20,9 +47,10 @@ export default function RiwayatPresensi() {
 
     const fetchHistory = async () => {
       try {
-        const response = await api.get("/attendance/history");
+        const response = await api.get("/attendances/history");
         if (isMounted) {
-          setHistory(response.data);
+          // Response format Opsi A: { success, message, data: [...] }
+          setHistory(response.data.data);
         }
       } catch (err) {
         console.error("Gagal mengambil riwayat presensi:", err);
@@ -80,17 +108,25 @@ export default function RiwayatPresensi() {
                   {history.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50/50">
                       <td className="py-3 px-4 font-medium text-gray-800">
-                        {item.date}
+                        {formatDate(item.tanggal)}
                       </td>
                       <td className="py-3 px-4 text-emerald-600 font-medium">
-                        {item.checkIn}
+                        {formatTime(item.jamMasuk)}
                       </td>
                       <td className="py-3 px-4 text-orange-600 font-medium">
-                        {item.checkOut ? item.checkOut : "-- : --"}
+                        {formatTime(item.jamPulang)}
                       </td>
                       <td className="py-3 px-4">
-                        <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                          {item.status}
+                        <span
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
+                            item.statusMasuk === "TEPAT_WAKTU"
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              : item.statusMasuk === "TERLAMBAT"
+                              ? "bg-red-50 text-red-600 border-red-100"
+                              : "bg-gray-50 text-gray-600 border-gray-200"
+                          }`}
+                        >
+                          {item.statusMasuk || "-"}
                         </span>
                       </td>
                     </tr>

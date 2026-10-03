@@ -27,18 +27,14 @@ export default function Login() {
 
     try {
       const response = await api.post("/auth/login", { email, password });
-
-      // Response format Opsi A: { success, message, data: { token, user } }
       const { token, user } = response.data.data as {
         token: string;
         user: User;
       };
 
-      // Simpan token & user
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Redirect berdasarkan role
       if (user.role === "ADMIN" || user.role === "HRD") {
         navigate("/admin");
       } else {
@@ -59,24 +55,28 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-md p-8 space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Selamat Datang</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Silakan masuk ke akun Anda
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-ink via-ink-2 to-ink-3 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-surface rounded-3xl shadow-2xl p-10 space-y-8 border border-line/50">
+        {/* Logo / Brand */}
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 bg-blue rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-blue/30">
+            <span className="text-white text-2xl font-bold">A</span>
+          </div>
+          <h1 className="text-3xl font-display font-extrabold text-ink tracking-tight">
+            PT ARIDEV STUDIO
+          </h1>
+          <p className="text-sm text-muted">Sistem Absensi Karyawan</p>
         </div>
 
         {error && (
-          <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+          <div className="p-4 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-ink-3 mb-2">
               Email
             </label>
             <input
@@ -85,13 +85,13 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              placeholder="nama@perusahaan.com"
+              className="w-full px-5 py-3.5 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none transition-all text-ink placeholder:text-muted/60"
+              placeholder="nama@aridevstudio.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-ink-3 mb-2">
               Kata Sandi
             </label>
             <input
@@ -100,7 +100,7 @@ export default function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-5 py-3.5 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none transition-all text-ink placeholder:text-muted/60"
               placeholder="••••••••"
             />
           </div>
@@ -108,11 +108,15 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            className="w-full py-4 bg-blue hover:bg-blue-dark text-white font-display font-bold rounded-xl shadow-lg shadow-blue/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             {loading ? "Memproses..." : "Masuk"}
           </button>
         </form>
+
+        <p className="text-center text-xs text-muted">
+          © 2026 PT Aridev Studio Creative
+        </p>
       </div>
     </div>
   );
