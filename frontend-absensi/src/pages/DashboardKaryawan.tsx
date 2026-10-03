@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import api from "../lib/api";
@@ -6,8 +6,14 @@ import api from "../lib/api";
 interface AttendanceStatus {
   hasCheckedIn: boolean;
   hasCheckedOut: boolean;
-  checkInTime?: string;
-  checkOutTime?: string;
+  checkInTime: string | null;
+  checkOutTime: string | null;
+}
+
+interface User {
+  id: number;
+  nama: string;
+  role: string;
 }
 
 export default function DashboardKaryawan() {
@@ -25,15 +31,31 @@ export default function DashboardKaryawan() {
   const [status, setStatus] = useState<AttendanceStatus>({
     hasCheckedIn: false,
     hasCheckedOut: false,
+    checkInTime: null,
+    checkOutTime: null,
   });
 
-  // 1. Update Jam Real-time
+  // File input ref
+  const checkInFileRef = useRef<HTMLInputElement>(null);
+  const checkOutFileRef = useRef<HTMLInputElement>(null);
+
+  const [user] = useState<User | null>(() => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
+  });
+
+  // 2. Update Jam Real-time
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // 2. Ambil Lokasi GPS User
+  // 3. Ambil Lokasi GPS User
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -54,38 +76,37 @@ export default function DashboardKaryawan() {
     }
   }, []);
 
-  // 3. Fetch Status Presensi Hari Ini
+  // 4. Fetch Status Presensi Hari Ini
   const fetchTodayStatus = useCallback(async () => {
     try {
-      const response = await api.get("/attendance/today");
-      setStatus(response.data);
+      const response = await api.get("/attendances/today");
+      setStatus(response.data.data);
     } catch (err) {
       console.error("Gagal mengambil status presensi:", err);
     }
   }, []);
 
+  // Initial load: inline async (tidak trigger ESLint rule)
   useEffect(() => {
     let isMounted = true;
 
-    const loadInitialData = async () => {
+    const load = async () => {
       try {
-        const response = await api.get("/attendance/today");
-        if (isMounted) {
-          setStatus(response.data);
-        }
+        const response = await api.get("/attendances/today");
+        if (isMounted) setStatus(response.data.data);
       } catch (err) {
         console.error("Gagal mengambil status presensi:", err);
       }
     };
 
-    loadInitialData();
+    load();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // 4. Handle Check-in
+  // 5. Handle Check-in
   const handleCheckIn = async () => {
     if (!location) {
       alert(
@@ -94,13 +115,26 @@ export default function DashboardKaryawan() {
       return;
     }
 
+    const fileInput = checkInFileRef.current;
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      alert("Foto wajib diambil untuk check-in.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await api.post("/attendance/check-in", {
-        latitude: location.lat,
-        longitude: location.lng,
+      const formData = new FormData();
+      formData.append("latitude", location.lat.toString());
+      formData.append("longitude", location.lng.toString());
+      formData.append("metodeMasuk", "GPS");
+      formData.append("fotoMasuk", fileInput.files[0]);
+
+      await api.post("/attendances/check-in", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
       alert("Check-in Berhasil!");
+      fileInput.value = ""; // reset input
       fetchTodayStatus();
     } catch (err: unknown) {
       if (isAxiosError(err)) {
@@ -113,7 +147,7 @@ export default function DashboardKaryawan() {
     }
   };
 
-  // 5. Handle Check-out
+  // 6. Handle Check-out
   const handleCheckOut = async () => {
     if (!location) {
       alert(
@@ -122,13 +156,25 @@ export default function DashboardKaryawan() {
       return;
     }
 
+    const fileInput = checkOutFileRef.current;
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      alert("Foto wajib diambil untuk check-out.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await api.post("/attendance/check-out", {
-        latitude: location.lat,
-        longitude: location.lng,
+      const formData = new FormData();
+      formData.append("latitude", location.lat.toString());
+      formData.append("longitude", location.lng.toString());
+      formData.append("fotoPulang", fileInput.files[0]);
+
+      await api.post("/attendances/check-out", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
       alert("Check-out Berhasil!");
+      fileInput.value = "";
       fetchTodayStatus();
     } catch (err: unknown) {
       if (isAxiosError(err)) {
@@ -141,9 +187,15 @@ export default function DashboardKaryawan() {
     }
   };
 
-  // 6. Handle Logout
-  const handleLogout = () => {
+  // 7. Handle Logout
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // abaikan error
+    }
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     navigate("/login");
   };
 
@@ -154,7 +206,9 @@ export default function DashboardKaryawan() {
           <h1 className="text-xl font-bold text-gray-800">
             Dashboard Karyawan
           </h1>
-          <p className="text-xs text-gray-500">Sistem Presensi Kehadiran</p>
+          <p className="text-xs text-gray-500">
+            {user ? `Halo, ${user.nama}` : "Sistem Presensi Kehadiran"}
+          </p>
         </div>
         <div className="flex gap-3">
           <button
@@ -173,6 +227,7 @@ export default function DashboardKaryawan() {
       </header>
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
+        {/* Card: Jam & Lokasi */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
           <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">
             {currentTime.toLocaleDateString("id-ID", {
@@ -200,6 +255,7 @@ export default function DashboardKaryawan() {
           )}
         </div>
 
+        {/* Card: Status Presensi */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
           <h2 className="text-lg font-bold text-gray-800 border-b pb-3">
             Presensi Hari Ini
@@ -211,25 +267,36 @@ export default function DashboardKaryawan() {
                 Jam Check-in
               </p>
               <p className="text-xl font-bold text-gray-800 mt-1">
-                {status.checkInTime ? status.checkInTime : "-- : --"}
+                {status.checkInTime || "-- : --"}
               </p>
             </div>
-
             <div className="p-4 rounded-xl bg-orange-50/50 border border-orange-100">
               <p className="text-xs font-semibold text-orange-600">
                 Jam Check-out
               </p>
               <p className="text-xl font-bold text-gray-800 mt-1">
-                {status.checkOutTime ? status.checkOutTime : "-- : --"}
+                {status.checkOutTime || "-- : --"}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+          {/* Check-in */}
+          <div className="space-y-3 pt-2">
+            <label className="block text-sm font-medium text-gray-700">
+              1. Ambil Foto Check-in
+            </label>
+            <input
+              ref={checkInFileRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              disabled={status.hasCheckedIn || loading}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
+            />
             <button
               onClick={handleCheckIn}
               disabled={status.hasCheckedIn || loading}
-              className={`flex-1 py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
+              className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
                 status.hasCheckedIn
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-emerald-600 hover:bg-emerald-700 active:scale-98"
@@ -241,11 +308,25 @@ export default function DashboardKaryawan() {
                 ? "Sudah Check-in"
                 : "Check-in Sekarang"}
             </button>
+          </div>
 
+          {/* Check-out */}
+          <div className="space-y-3 pt-4 border-t">
+            <label className="block text-sm font-medium text-gray-700">
+              2. Ambil Foto Check-out
+            </label>
+            <input
+              ref={checkOutFileRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              disabled={!status.hasCheckedIn || status.hasCheckedOut || loading}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 disabled:opacity-50"
+            />
             <button
               onClick={handleCheckOut}
               disabled={!status.hasCheckedIn || status.hasCheckedOut || loading}
-              className={`flex-1 py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
+              className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
                 !status.hasCheckedIn || status.hasCheckedOut
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-orange-600 hover:bg-orange-700 active:scale-98"
