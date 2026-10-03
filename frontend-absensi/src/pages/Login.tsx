@@ -3,6 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import api from "../lib/api";
 
+interface User {
+  id: number;
+  nik: string;
+  nama: string;
+  email: string;
+  role: "KARYAWAN" | "HRD" | "ADMIN";
+  officeId: number | null;
+  fotoProfil: string | null;
+}
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,8 +27,23 @@ export default function Login() {
 
     try {
       const response = await api.post("/auth/login", { email, password });
-      localStorage.setItem("token", response.data.token);
-      navigate("/dashboard");
+
+      // Response format Opsi A: { success, message, data: { token, user } }
+      const { token, user } = response.data.data as {
+        token: string;
+        user: User;
+      };
+
+      // Simpan token & user
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Redirect berdasarkan role
+      if (user.role === "ADMIN" || user.role === "HRD") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         setError(

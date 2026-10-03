@@ -12,14 +12,18 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Route Terproteksi (Harus Login) */}
-        <Route element={<ProtectedRoute />}>
+        {/* Route Karyawan — hanya untuk role KARYAWAN */}
+        <Route element={<ProtectedRoute allowedRoles={["KARYAWAN"]} />}>
           <Route path="/dashboard" element={<DashboardKaryawan />} />
           <Route path="/riwayat" element={<RiwayatPresensi />} />
-          <Route path="/admin" element={<DashboardAdmin />} />{" "}
-          {/* Tambahkan ini */}
         </Route>
 
+        {/* Route Admin/HRD — hanya untuk role ADMIN & HRD */}
+        <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HRD"]} />}>
+          <Route path="/admin" element={<DashboardAdmin />} />
+        </Route>
+
+        {/* Catch-all: redirect ke login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
