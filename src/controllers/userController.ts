@@ -53,7 +53,8 @@ const validateUserInput = (
   const { nik, nama, email, password, role, officeId } = body;
 
   // nik
-  if (nik !== undefined) {
+  // nik — OPSIONAL saat create (akan di-auto-generate jika kosong)
+  if (nik !== undefined && nik !== null && nik !== "") {
     if (
       typeof nik !== "string" ||
       nik.trim().length < 3 ||
@@ -61,8 +62,6 @@ const validateUserInput = (
     ) {
       return "NIK harus berupa string dengan panjang 3-50 karakter.";
     }
-  } else if (!isUpdate) {
-    return "NIK wajib diisi.";
   }
 
   // nama
@@ -278,9 +277,37 @@ export const createUser = async (req: Request, res: Response) => {
       );
     }
 
-    // Cek duplikasi NIK & email
+    // Auto-generate NIK jika kosong
+    let finalNik = nik?.trim() || "";
+    if (!finalNik) {
+      // Format: [PREFIX]-[TAHUN]-[URUT 4 digit]
+      const year = new Date().getFullYear();
+      const prefix =
+        assignedRole === "ADMIN"
+          ? "ADM"
+          : assignedRole === "HRD"
+          ? "HRD"
+          : "KRY";
+
+      // Cari urutan terakhir dengan prefix + tahun yang sama
+      const lastUser = await prisma.user.findFirst({
+        where: { nik: { startsWith: `${prefix}-${year}-` } },
+        orderBy: { nik: "desc" },
+      });
+
+      let nextNumber = 1;
+      if (lastUser) {
+        const parts = lastUser.nik.split("-");
+        const lastNum = parseInt(parts[2] || "0");
+        nextNumber = lastNum + 1;
+      }
+
+      finalNik = `${prefix}-${year}-${String(nextNumber).padStart(4, "0")}`;
+    }
+
+    // Cek duplikasi NIK (jika user input manual)
     const existingNik = await prisma.user.findUnique({
-      where: { nik: nik.trim() },
+      where: { nik: finalNik },
     });
     if (existingNik) {
       return sendResponse(res, 400, false, "NIK sudah terdaftar.");
@@ -310,7 +337,7 @@ export const createUser = async (req: Request, res: Response) => {
 
     const newUser = await prisma.user.create({
       data: {
-        nik: nik.trim(),
+        nik: finalNik,
         nama: nama.trim(),
         email: email.trim().toLowerCase(),
         password: hashedPassword,
