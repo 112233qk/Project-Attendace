@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import cors from "cors";
+import cors, { CorsOptions } from "cors"; // ← tambah CorsOptions
 import path from "path";
 import multer from "multer";
 import swaggerUi from "swagger-ui-express";
@@ -21,33 +21,38 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim());
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Izinkan request tanpa origin (Postman, curl, server-to-server)
-      if (!origin) return callback(null, true);
+const corsOptions: CorsOptions = {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
+    // Izinkan request tanpa origin (Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
 
-      // Izinkan origin yang ada di whitelist
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
-        return callback(null, true);
-      }
+    // Izinkan origin yang ada di whitelist
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+      return callback(null, true);
+    }
 
-      return callback(new Error(`CORS: Origin ${origin} tidak diizinkan.`));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Disposition"],
-    maxAge: 86400, // Cache preflight 24 jam
-  })
-);
+    // ⭐ Izinkan Railway URL sendiri (untuk Swagger UI)
+    if (origin.endsWith(".up.railway.app") || origin.includes("localhost")) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS: Origin ${origin} tidak diizinkan.`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Content-Disposition"],
+  maxAge: 86400,
+};
+
+app.use(cors(corsOptions));
 
 // ============================================
 // BODY PARSER
 // ============================================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
