@@ -168,7 +168,9 @@ export default function UserFormModal({
                   (kosongkan untuk auto-generate)
                 </span>
               ) : (
-                <span className="text-red-500">*</span>
+                <span className="text-xs font-normal text-muted">
+                  (tidak dapat diubah)
+                </span>
               )}
             </label>
             <input
