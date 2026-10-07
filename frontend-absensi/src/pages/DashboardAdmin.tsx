@@ -4,8 +4,9 @@ import api from "../lib/api";
 import RekapHariIni from "./admin/RekapHariIni";
 import ListKaryawan from "./admin/ListKaryawan";
 import ApprovalIzin from "./admin/ApprovalIzin";
+import ExportLaporan from "./admin/ExportLaporan";
 
-type TabType = "rekap" | "karyawan" | "izin";
+type TabType = "rekap" | "karyawan" | "izin" | "laporan";
 
 interface User {
   id: number;
@@ -41,6 +42,7 @@ export default function DashboardAdmin() {
     { key: "rekap", label: "Rekap Hari Ini", icon: "📊" },
     { key: "karyawan", label: "Karyawan", icon: "👥" },
     { key: "izin", label: "Approval Izin", icon: "📝" },
+    { key: "laporan", label: "Export Laporan", icon: "📄" },
   ];
 
   return (
@@ -91,11 +93,10 @@ export default function DashboardAdmin() {
       </nav>
 
       {/* Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6">
-        {activeTab === "rekap" && <RekapHariIni />}
-        {activeTab === "karyawan" && <ListKaryawan />}
-        {activeTab === "izin" && <ApprovalIzin />}
-      </main>
+      {activeTab === "rekap" && <RekapHariIni />}
+      {activeTab === "karyawan" && <ListKaryawan />}
+      {activeTab === "izin" && <ApprovalIzin />}
+      {activeTab === "laporan" && <ExportLaporan />}
 
       {/* Footer */}
       <footer className="bg-surface border-t border-line px-6 py-4">
