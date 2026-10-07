@@ -4,6 +4,8 @@ import DashboardKaryawan from "./pages/DashboardKaryawan";
 import RiwayatPresensi from "./pages/RiwayatPresensi";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AjukanIzin from "./pages/AjukanIzin";
+import RiwayatIzin from "./pages/RiwayatIzin";
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
         <Route element={<ProtectedRoute allowedRoles={["KARYAWAN"]} />}>
           <Route path="/dashboard" element={<DashboardKaryawan />} />
           <Route path="/riwayat" element={<RiwayatPresensi />} />
+          <Route path="/ajukan-izin" element={<AjukanIzin />} />
+          <Route path="/riwayat-izin" element={<RiwayatIzin />} />
         </Route>
 
         {/* Route Admin/HRD — hanya untuk role ADMIN & HRD */}

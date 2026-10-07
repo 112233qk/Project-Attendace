@@ -1,0 +1,248 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../lib/api";
+
+interface Permission {
+  id: number;
+  jenis: "IZIN" | "SAKIT" | "CUTI";
+  tanggalMulai: string;
+  tanggalSelesai: string;
+  alasan: string;
+  buktiFile: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  rejectionReason: string | null;
+  createdAt: string;
+}
+
+const formatDate = (iso: string): string => {
+  const d = new Date(iso);
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+const getStatusBadge = (status: string) => {
+  const colors: Record<string, string> = {
+    PENDING: "bg-yellow-50 text-yellow-600 border-yellow-100",
+    APPROVED: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    REJECTED: "bg-red-50 text-red-600 border-red-100",
+  };
+  return colors[status] || "bg-gray-50 text-gray-600 border-gray-100";
+};
+
+const getJenisBadge = (jenis: string) => {
+  const colors: Record<string, string> = {
+    IZIN: "bg-blue-50 text-blue-600 border-blue-100",
+    SAKIT: "bg-red-50 text-red-600 border-red-100",
+    CUTI: "bg-violet-50 text-violet-600 border-violet-100",
+  };
+  return colors[jenis] || "bg-gray-50 text-gray-600 border-gray-100";
+};
+
+export default function RiwayatIzin() {
+  const navigate = useNavigate();
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [cancelTarget, setCancelTarget] = useState<Permission | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/permissions");
+      setPermissions(res.data.data.permissions);
+    } catch (err) {
+      console.error("Gagal load riwayat izin:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get("/permissions");
+        if (isMounted) setPermissions(res.data.data.permissions);
+      } catch (err) {
+        console.error("Gagal load riwayat izin:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelLoading(true);
+    try {
+      await api.delete(`/permissions/${cancelTarget.id}`);
+      setCancelTarget(null);
+      fetchData();
+    } catch {
+      alert("Gagal membatalkan pengajuan.");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-surface-soft flex flex-col">
+      <header className="bg-surface border-b border-line px-6 py-4 flex justify-between items-center shadow-sm">
+        <div>
+          <h1 className="text-xl font-display font-bold text-ink">
+            Riwayat Izin
+          </h1>
+          <p className="text-xs text-muted">
+            Daftar pengajuan izin/sakit/cuti Anda
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate("/ajukan-izin")}
+            className="px-4 py-2 text-sm bg-blue text-white font-semibold rounded-xl hover:bg-blue-dark transition-colors cursor-pointer"
+          >
+            + Ajukan Izin
+          </button>
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="px-4 py-2 text-sm bg-surface-soft font-semibold text-ink-3 hover:bg-line rounded-xl transition-colors cursor-pointer"
+          >
+            Kembali
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-4xl w-full mx-auto p-6">
+        <div className="bg-surface rounded-2xl shadow-sm border border-line overflow-hidden">
+          {loading ? (
+            <div className="p-8 text-center text-muted">Memuat data...</div>
+          ) : permissions.length === 0 ? (
+            <div className="p-12 text-center space-y-3">
+              <p className="text-4xl">📭</p>
+              <p className="text-muted">Belum ada pengajuan.</p>
+              <button
+                onClick={() => navigate("/ajukan-izin")}
+                className="px-5 py-2.5 bg-blue text-white font-semibold rounded-xl hover:bg-blue-dark transition-colors cursor-pointer text-sm"
+              >
+                Buat Pengajuan Pertama
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
+                    <th className="py-3 px-4">Jenis</th>
+                    <th className="py-3 px-4">Periode</th>
+                    <th className="py-3 px-4">Alasan</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {permissions.map((p) => (
+                    <tr key={p.id} className="hover:bg-surface-soft/50">
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getJenisBadge(
+                            p.jenis
+                          )}`}
+                        >
+                          {p.jenis}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-muted">
+                        {formatDate(p.tanggalMulai)} —{" "}
+                        {formatDate(p.tanggalSelesai)}
+                      </td>
+                      <td className="py-3 px-4 max-w-xs">
+                        <p className="text-ink truncate" title={p.alasan}>
+                          {p.alasan}
+                        </p>
+                        {p.status === "REJECTED" && p.rejectionReason && (
+                          <p
+                            className="text-xs text-red-500 mt-1 truncate"
+                            title={p.rejectionReason}
+                          >
+                            ✗ {p.rejectionReason}
+                          </p>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(
+                            p.status
+                          )}`}
+                        >
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {p.status === "PENDING" && (
+                          <button
+                            onClick={() => setCancelTarget(p)}
+                            className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 cursor-pointer"
+                          >
+                            Batalkan
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Cancel Confirm Modal */}
+      {cancelTarget && (
+        <div className="fixed inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-display font-bold text-ink">
+                Batalkan Pengajuan?
+              </h3>
+              <p className="text-sm text-muted">
+                Pengajuan{" "}
+                <strong className="text-ink">{cancelTarget.jenis}</strong> (
+                {formatDate(cancelTarget.tanggalMulai)} —{" "}
+                {formatDate(cancelTarget.tanggalSelesai)}) akan dihapus.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCancelTarget(null)}
+                disabled={cancelLoading}
+                className="flex-1 py-3 bg-surface-soft text-ink-3 font-semibold rounded-xl hover:bg-line transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Tidak
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={cancelLoading}
+                className="flex-1 py-3 bg-red-500 text-white font-display font-bold rounded-xl hover:bg-red-600 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {cancelLoading ? "Memproses..." : "Ya, Batalkan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

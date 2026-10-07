@@ -210,12 +210,18 @@ export default function DashboardKaryawan() {
             {user ? `Halo, ${user.nama}` : "Sistem Presensi Kehadiran"}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => navigate("/riwayat")}
             className="px-4 py-2 text-sm bg-blue-50 font-medium text-blue-600 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
           >
             Riwayat
+          </button>
+          <button
+            onClick={() => navigate("/ajukan-izin")}
+            className="px-4 py-2 text-sm bg-violet-50 font-medium text-violet-600 hover:bg-violet-100 rounded-lg transition-colors cursor-pointer"
+          >
+            Ajukan Izin
           </button>
           <button
             onClick={handleLogout}
