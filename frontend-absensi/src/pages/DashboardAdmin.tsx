@@ -5,8 +5,9 @@ import RekapHariIni from "./admin/RekapHariIni";
 import ListKaryawan from "./admin/ListKaryawan";
 import ApprovalIzin from "./admin/ApprovalIzin";
 import ExportLaporan from "./admin/ExportLaporan";
+import KelolaKantor from "./admin/KelolaKantor";
 
-type TabType = "rekap" | "karyawan" | "izin" | "laporan";
+type TabType = "rekap" | "karyawan" | "izin" | "laporan" | "kantor";
 
 interface User {
   id: number;
@@ -43,6 +44,7 @@ export default function DashboardAdmin() {
     { key: "karyawan", label: "Karyawan", icon: "👥" },
     { key: "izin", label: "Approval Izin", icon: "📝" },
     { key: "laporan", label: "Export Laporan", icon: "📄" },
+    { key: "kantor", label: "Kelola Kantor", icon: "🏢" },
   ];
 
   return (
@@ -97,6 +99,7 @@ export default function DashboardAdmin() {
       {activeTab === "karyawan" && <ListKaryawan />}
       {activeTab === "izin" && <ApprovalIzin />}
       {activeTab === "laporan" && <ExportLaporan />}
+      {activeTab === "kantor" && <KelolaKantor />}
 
       {/* Footer */}
       <footer className="bg-surface border-t border-line px-6 py-4">
