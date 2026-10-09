@@ -51,10 +51,17 @@ export default function DashboardAdmin() {
     <div className="min-h-screen bg-surface-soft flex flex-col">
       {/* Header — Tema Gelap Aridev */}
       <header className="bg-ink border-b border-ink-3 px-6 py-4 shadow-lg">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          {/* Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue rounded-xl flex items-center justify-center shadow-lg shadow-blue/30">
-              <span className="text-white text-lg font-bold">A</span>
+            <div className="w-10 h-10 bg-blue rounded-xl flex items-center justify-center shadow-lg shadow-blue/30 shrink-0">
+              <span className="text-white text-lg font-bold leading-none font-sans translate-y-[0.5px]">
+                {user?.role === "ADMIN"
+                  ? "A"
+                  : user?.role === "HRD"
+                  ? "H"
+                  : "K"}
+              </span>
             </div>
             <div>
               <h1 className="text-lg font-display font-bold text-white">
@@ -65,12 +72,22 @@ export default function DashboardAdmin() {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm bg-red-500/20 font-medium text-red-300 hover:bg-red-500/30 rounded-xl transition-colors cursor-pointer"
-          >
-            Keluar
-          </button>
+
+          {/* Actions */}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => navigate("/profil")}
+              className="px-4 py-2 text-sm bg-white/10 font-medium text-white hover:bg-white/20 rounded-xl transition-colors cursor-pointer"
+            >
+              Profil
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-sm bg-red-500/20 font-medium text-red-300 hover:bg-red-500/30 rounded-xl transition-colors cursor-pointer"
+            >
+              Keluar
+            </button>
+          </div>
         </div>
       </header>
 

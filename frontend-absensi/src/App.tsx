@@ -6,6 +6,7 @@ import DashboardAdmin from "./pages/DashboardAdmin";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AjukanIzin from "./pages/AjukanIzin";
 import RiwayatIzin from "./pages/RiwayatIzin";
+import Profil from "./pages/Profil";
 
 export default function App() {
   return (
@@ -25,6 +26,15 @@ export default function App() {
         {/* Route Admin/HRD — hanya untuk role ADMIN & HRD */}
         <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HRD"]} />}>
           <Route path="/admin" element={<DashboardAdmin />} />
+        </Route>
+
+        {/* Route Profile (semua role) */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["KARYAWAN", "HRD", "ADMIN"]} />
+          }
+        >
+          <Route path="/profil" element={<Profil />} />
         </Route>
 
         {/* Catch-all: redirect ke login */}

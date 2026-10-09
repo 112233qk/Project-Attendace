@@ -201,34 +201,56 @@ export default function DashboardKaryawan() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shadow-xs">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">
-            Dashboard Karyawan
-          </h1>
-          <p className="text-xs text-gray-500">
-            {user ? `Halo, ${user.nama}` : "Sistem Presensi Kehadiran"}
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => navigate("/riwayat")}
-            className="px-4 py-2 text-sm bg-blue-50 font-medium text-blue-600 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
-          >
-            Riwayat
-          </button>
-          <button
-            onClick={() => navigate("/ajukan-izin")}
-            className="px-4 py-2 text-sm bg-violet-50 font-medium text-violet-600 hover:bg-violet-100 rounded-lg transition-colors cursor-pointer"
-          >
-            Ajukan Izin
-          </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm bg-red-50 font-medium text-red-600 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
-          >
-            Keluar
-          </button>
+      <header className="bg-ink border-b border-ink-3 px-6 py-4 shadow-lg">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          {/* Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue rounded-xl flex items-center justify-center shadow-lg shadow-blue/30 shrink-0">
+              <span className="text-white text-lg font-bold leading-none font-sans translate-y-[0.5px]">
+                {user?.role === "ADMIN"
+                  ? "A"
+                  : user?.role === "HRD"
+                  ? "H"
+                  : "K"}
+              </span>
+            </div>
+            <div>
+              <h1 className="text-lg font-display font-bold text-white">
+                Dashboard Karyawan
+              </h1>
+              <p className="text-xs text-blue-2">
+                {user ? `Halo, ${user.nama}` : "Sistem Presensi Kehadiran"}
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => navigate("/profil")}
+              className="px-4 py-2 text-sm bg-white/10 font-medium text-white hover:bg-white/20 rounded-xl transition-colors cursor-pointer"
+            >
+              Profil
+            </button>
+            <button
+              onClick={() => navigate("/riwayat")}
+              className="px-4 py-2 text-sm bg-blue-500/20 font-medium text-blue-200 hover:bg-blue-500/30 rounded-xl transition-colors cursor-pointer"
+            >
+              Riwayat
+            </button>
+            <button
+              onClick={() => navigate("/ajukan-izin")}
+              className="px-4 py-2 text-sm bg-violet-500/20 font-medium text-violet-200 hover:bg-violet-500/30 rounded-xl transition-colors cursor-pointer"
+            >
+              Ajukan Izin
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-sm bg-red-500/20 font-medium text-red-300 hover:bg-red-500/30 rounded-xl transition-colors cursor-pointer"
+            >
+              Keluar
+            </button>
+          </div>
         </div>
       </header>
 
