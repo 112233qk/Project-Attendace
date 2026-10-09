@@ -106,10 +106,6 @@ export default function Profil() {
     return colors[role] || "bg-gray-50 text-gray-600 border-gray-100";
   };
 
-  // Determine kembali button target
-  const dashboardTarget =
-    user?.role === "ADMIN" || user?.role === "HRD" ? "/admin" : "/dashboard";
-
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-soft flex items-center justify-center">
@@ -137,7 +133,7 @@ export default function Profil() {
             <p className="text-xs text-muted">Kelola informasi akun Anda</p>
           </div>
           <button
-            onClick={() => navigate(dashboardTarget)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 text-sm bg-surface-soft font-semibold text-ink-3 hover:bg-line rounded-xl transition-colors cursor-pointer"
           >
             Kembali

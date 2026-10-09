@@ -7,6 +7,7 @@ import {
   cancelPermission,
   approvePermission,
   rejectPermission,
+  getMyPermissions,
 } from "../controllers/permissionController";
 import { authenticate, authorize } from "../middlewares/authMiddleware";
 import { uploadPermission } from "../config/multerPermission";
@@ -31,6 +32,9 @@ router.post(
 // ENDPOINT: List & Detail (semua role login, RBAC di controller)
 // ============================================
 router.get("/", getAllPermissions);
+
+router.get("/me", authorize("KARYAWAN", "HRD", "ADMIN"), getMyPermissions);
+
 router.get("/:id", getPermissionById);
 
 // ============================================
@@ -49,5 +53,6 @@ router.delete("/:id", authorize("KARYAWAN"), cancelPermission);
 // ============================================
 router.put("/:id/approve", authorize("HRD", "ADMIN"), approvePermission);
 router.put("/:id/reject", authorize("HRD", "ADMIN"), rejectPermission);
+router.get("/me", authorize("KARYAWAN", "HRD", "ADMIN"), getMyPermissions);
 
 export default router;

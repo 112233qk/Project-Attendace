@@ -225,7 +225,16 @@ export default function DashboardKaryawan() {
           </div>
 
           {/* Actions */}
+
           <div className="flex gap-2 flex-wrap">
+            {user?.role === "HRD" && (
+              <button
+                onClick={() => navigate("/admin")}
+                className="px-4 py-2 text-sm bg-white/10 font-medium text-white hover:bg-white/20 rounded-xl transition-colors cursor-pointer"
+              >
+                Admin Panel
+              </button>
+            )}
             <button
               onClick={() => navigate("/profil")}
               className="px-4 py-2 text-sm bg-white/10 font-medium text-white hover:bg-white/20 rounded-xl transition-colors cursor-pointer"

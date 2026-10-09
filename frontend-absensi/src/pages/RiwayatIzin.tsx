@@ -52,7 +52,7 @@ export default function RiwayatIzin() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/permissions");
+      const res = await api.get("/permissions/me");
       setPermissions(res.data.data.permissions);
     } catch (err) {
       console.error("Gagal load riwayat izin:", err);
@@ -67,7 +67,7 @@ export default function RiwayatIzin() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await api.get("/permissions");
+        const res = await api.get("/permissions/me");
         if (isMounted) setPermissions(res.data.data.permissions);
       } catch (err) {
         console.error("Gagal load riwayat izin:", err);

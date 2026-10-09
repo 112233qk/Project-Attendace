@@ -745,3 +745,63 @@ export const rejectPermission = async (req: Request, res: Response) => {
     );
   }
 };
+
+// ============================================
+// 8. GET MY PERMISSIONS (Riwayat pribadi, semua role)
+// ============================================
+export const getMyPermissions = async (req: Request, res: Response) => {
+  try {
+    const { id: currentUserId } = req.user!;
+    const { status, jenis, page, limit } = req.query;
+
+    const whereClause: any = { userId: currentUserId };
+
+    // Filter opsional
+    if (
+      status &&
+      ["PENDING", "APPROVED", "REJECTED"].includes(status as string)
+    ) {
+      whereClause.status = status;
+    }
+    if (jenis && ["IZIN", "SAKIT", "CUTI"].includes(jenis as string)) {
+      whereClause.jenis = jenis;
+    }
+
+    // Pagination
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    const [permissions, total] = await Promise.all([
+      prisma.permission.findMany({
+        where: whereClause,
+        skip,
+        take: limitNum,
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: { select: { id: true, nama: true, nik: true, email: true } },
+          approver: { select: { id: true, nama: true, role: true } },
+        },
+      }),
+      prisma.permission.count({ where: whereClause }),
+    ]);
+
+    return sendResponse(res, 200, true, "Riwayat pengajuan berhasil diambil.", {
+      permissions,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error: any) {
+    console.error("Get My Permissions Error:", error);
+    return sendResponse(
+      res,
+      500,
+      false,
+      error.message || "Terjadi kesalahan pada server."
+    );
+  }
+};
