@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import { useToast } from "../components/ui/ToastProvider";
 
 interface Permission {
   id: number;
@@ -42,6 +43,7 @@ const getJenisBadge = (jenis: string) => {
 
 export default function RiwayatIzin() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelTarget, setCancelTarget] = useState<Permission | null>(null);
@@ -86,10 +88,11 @@ export default function RiwayatIzin() {
     setCancelLoading(true);
     try {
       await api.delete(`/permissions/${cancelTarget.id}`);
+      toast.success("Berhasil", "Pengajuan berhasil dibatalkan.");
       setCancelTarget(null);
       fetchData();
     } catch {
-      alert("Gagal membatalkan pengajuan.");
+      toast.error("Gagal", "Gagal membatalkan pengajuan.");
     } finally {
       setCancelLoading(false);
     }

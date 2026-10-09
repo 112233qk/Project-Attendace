@@ -2,10 +2,12 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import api from "../lib/api";
+import { useToast } from "../components/ui/ToastProvider";
 
 type JenisIzin = "IZIN" | "SAKIT" | "CUTI";
 
 export default function AjukanIzin() {
+  const toast = useToast();
   const navigate = useNavigate();
   const [jenis, setJenis] = useState<JenisIzin>("IZIN");
   const [tanggalMulai, setTanggalMulai] = useState("");
@@ -61,6 +63,7 @@ export default function AjukanIzin() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      toast.success("Pengajuan Terkirim", "Menunggu persetujuan HRD/Admin.");
       setSuccess(true);
       // Reset form
       setJenis("IZIN");
@@ -70,9 +73,15 @@ export default function AjukanIzin() {
       if (fileRef.current) fileRef.current.value = "";
     } catch (err: unknown) {
       if (isAxiosError(err)) {
-        setError(err.response?.data?.message || "Gagal mengajukan izin.");
+        toast.error(
+          "Gagal Mengajukan",
+          err.response?.data?.message || "Terjadi kesalahan."
+        );
       } else {
-        setError("Terjadi kesalahan yang tidak diketahui.");
+        toast.error(
+          "Gagal Mengajukan",
+          "Terjadi kesalahan yang tidak diketahui."
+        );
       }
     } finally {
       setLoading(false);

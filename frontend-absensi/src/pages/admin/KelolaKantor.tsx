@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { isAxiosError } from "axios";
 import api from "../../lib/api";
 import OfficeFormModal, { OfficeData } from "./components/OfficeFormModal";
+import { useToast } from "../../components/ui/ToastProvider";
 
 type Role = "KARYAWAN" | "HRD" | "ADMIN";
 
@@ -19,6 +20,7 @@ interface Office {
 }
 
 export default function KelolaKantor() {
+  const toast = useToast();
   const [offices, setOffices] = useState<Office[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,14 +105,21 @@ export default function KelolaKantor() {
     setActionLoading(true);
     try {
       await api.delete(`/offices/${deleteTarget.id}`);
+      toast.success("Berhasil", `Kantor ${deleteTarget.name} telah dihapus.`);
       setIsDeleteOpen(false);
       setDeleteTarget(null);
       fetchOffices();
     } catch (err: unknown) {
       if (isAxiosError(err)) {
-        alert(err.response?.data?.message || "Gagal menghapus kantor.");
+        toast.error(
+          "Gagal Menghapus",
+          err.response?.data?.message || "Terjadi kesalahan."
+        );
       } else {
-        alert("Terjadi kesalahan.");
+        toast.error(
+          "Gagal Menghapus",
+          "Terjadi kesalahan yang tidak diketahui."
+        );
       }
     } finally {
       setActionLoading(false);
@@ -119,6 +128,12 @@ export default function KelolaKantor() {
 
   const handleFormSuccess = () => {
     setIsFormOpen(false);
+    toast.success(
+      "Berhasil",
+      formMode === "create"
+        ? "Kantor baru berhasil dibuat."
+        : "Kantor berhasil diperbarui."
+    );
     fetchOffices();
   };
 

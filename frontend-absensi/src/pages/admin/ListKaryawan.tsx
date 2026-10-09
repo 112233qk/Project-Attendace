@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import api from "../../lib/api";
 import UserFormModal, { UserData } from "./components/UserFormModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
+import { useToast } from "../../components/ui/ToastProvider";
 
 type Role = "KARYAWAN" | "HRD" | "ADMIN";
 
@@ -25,6 +26,7 @@ interface Pagination {
 }
 
 export default function ListKaryawan() {
+  const toast = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,14 +131,21 @@ export default function ListKaryawan() {
     setActionLoading(true);
     try {
       await api.delete(`/users/${deleteTarget.id}`);
+      toast.success("Berhasil", `${deleteTarget.nama} telah dinonaktifkan.`);
       setIsDeleteOpen(false);
       setDeleteTarget(null);
       fetchUsers();
     } catch (err: unknown) {
       if (isAxiosError(err)) {
-        alert(err.response?.data?.message || "Gagal menonaktifkan user.");
+        toast.error(
+          "Gagal Menonaktifkan",
+          err.response?.data?.message || "Terjadi kesalahan."
+        );
       } else {
-        alert("Terjadi kesalahan.");
+        toast.error(
+          "Gagal Menonaktifkan",
+          "Terjadi kesalahan yang tidak diketahui."
+        );
       }
     } finally {
       setActionLoading(false);
@@ -145,6 +154,12 @@ export default function ListKaryawan() {
 
   const handleFormSuccess = () => {
     setIsFormOpen(false);
+    toast.success(
+      "Berhasil",
+      formMode === "create"
+        ? "User baru berhasil dibuat."
+        : "User berhasil diperbarui."
+    );
     fetchUsers();
   };
 

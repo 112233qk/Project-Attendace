@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { isAxiosError } from "axios";
 import api from "../../lib/api";
+import { useToast } from "../../components/ui/ToastProvider";
 
 interface Office {
   id: number;
@@ -44,6 +45,7 @@ const getToday = (): string => {
 };
 
 export default function ExportLaporan() {
+  const toast = useToast();
   const [tanggalMulai, setTanggalMulai] = useState(getFirstDayOfMonth());
   const [tanggalSelesai, setTanggalSelesai] = useState(getToday());
   const [officeId, setOfficeId] = useState<string>("");
@@ -151,6 +153,11 @@ export default function ExportLaporan() {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+
+      toast.success(
+        "Berhasil",
+        `File ${format.toUpperCase()} berhasil diunduh.`
+      );
     } catch (err: unknown) {
       if (isAxiosError(err) && err.response?.data instanceof Blob) {
         // Backend kirim error sebagai blob — perlu parse

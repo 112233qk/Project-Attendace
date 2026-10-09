@@ -75,6 +75,16 @@ export default function DashboardAdmin() {
 
           {/* Actions */}
           <div className="flex gap-2 flex-wrap">
+            {/* Tombol Absen — hanya untuk HRD */}
+            {user?.role === "HRD" && (
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-4 py-2 text-sm bg-emerald-500/20 font-medium text-emerald-200 hover:bg-emerald-500/30 rounded-xl transition-colors cursor-pointer"
+              >
+                Absen
+              </button>
+            )}
+
             <button
               onClick={() => navigate("/profil")}
               className="px-4 py-2 text-sm bg-white/10 font-medium text-white hover:bg-white/20 rounded-xl transition-colors cursor-pointer"

@@ -601,6 +601,16 @@ export const approvePermission = async (req: Request, res: Response) => {
       return sendResponse(res, 404, false, "Pengajuan tidak ditemukan.");
     }
 
+    // ⭐ Cegah self-approval
+    if (permission.userId === actorId) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Anda tidak dapat menyetujui pengajuan Anda sendiri. Minta HRD lain atau Admin untuk menyetujui."
+      );
+    }
+
     if (permission.status !== "PENDING") {
       return sendResponse(
         res,
@@ -681,6 +691,16 @@ export const rejectPermission = async (req: Request, res: Response) => {
     });
     if (!permission) {
       return sendResponse(res, 404, false, "Pengajuan tidak ditemukan.");
+    }
+
+    // ⭐ Cegah self-reject
+    if (permission.userId === actorId) {
+      return sendResponse(
+        res,
+        403,
+        false,
+        "Anda tidak dapat menolak pengajuan Anda sendiri. Minta HRD lain atau Admin untuk menolak."
+      );
     }
 
     if (permission.status !== "PENDING") {

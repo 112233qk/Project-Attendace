@@ -15,8 +15,8 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Route Karyawan — hanya untuk role KARYAWAN */}
-        <Route element={<ProtectedRoute allowedRoles={["KARYAWAN"]} />}>
+        {/* Route Karyawan & HRD — untuk absensi */}
+        <Route element={<ProtectedRoute allowedRoles={["KARYAWAN", "HRD"]} />}>
           <Route path="/dashboard" element={<DashboardKaryawan />} />
           <Route path="/riwayat" element={<RiwayatPresensi />} />
           <Route path="/ajukan-izin" element={<AjukanIzin />} />

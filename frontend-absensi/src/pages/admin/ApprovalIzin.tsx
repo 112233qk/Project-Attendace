@@ -3,6 +3,7 @@ import api from "../../lib/api";
 import RejectModal from "./components/RejectModal";
 import ApproveConfirmModal from "./components/ApproveConfirmModal";
 import FilePreviewModal from "./components/FilePreviewModal";
+import { useToast } from "../../components/ui/ToastProvider";
 
 interface Permission {
   id: number;
@@ -49,6 +50,16 @@ const BASE_URL =
   "https://project-attendace-production.up.railway.app";
 
 export default function ApprovalIzin() {
+  const toast = useToast();
+  const [currentUserId] = useState<number | null>(() => {
+    const str = localStorage.getItem("user");
+    if (!str) return null;
+    try {
+      return JSON.parse(str).id as number;
+    } catch {
+      return null;
+    }
+  });
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,6 +133,7 @@ export default function ApprovalIzin() {
   const handleApproveSuccess = () => {
     setIsApproveOpen(false);
     setApproveTarget(null);
+    toast.success("Berhasil", "Pengajuan telah disetujui.");
     fetchPermissions();
   };
 
@@ -131,8 +143,9 @@ export default function ApprovalIzin() {
   };
 
   const handleRejectSuccess = () => {
-    setIsRejectOpen(false);
-    setRejectTarget(null);
+    setIsApproveOpen(false);
+    setApproveTarget(null);
+    toast.success("Berhasil", "Pengajuan telah ditolak.");
     fetchPermissions();
   };
 
@@ -267,22 +280,29 @@ export default function ApprovalIzin() {
                         >
                           Detail
                         </button>
-                        {p.status === "PENDING" && (
-                          <>
-                            <button
-                              onClick={() => handleApproveClick(p)}
-                              className="px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 cursor-pointer"
-                            >
-                              ✓ Setujui
-                            </button>
-                            <button
-                              onClick={() => handleRejectClick(p)}
-                              className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 cursor-pointer"
-                            >
-                              ✗ Tolak
-                            </button>
-                          </>
-                        )}
+                        {p.status === "PENDING" &&
+                          (p.userId === currentUserId ? (
+                            // Pengajuan milik sendiri → tampilkan label
+                            <span className="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-lg italic">
+                              Menunggu HRD/Admin lain
+                            </span>
+                          ) : (
+                            // Pengajuan orang lain → tampilkan tombol
+                            <>
+                              <button
+                                onClick={() => handleApproveClick(p)}
+                                className="px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 cursor-pointer"
+                              >
+                                ✓ Setujui
+                              </button>
+                              <button
+                                onClick={() => handleRejectClick(p)}
+                                className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 cursor-pointer"
+                              >
+                                ✗ Tolak
+                              </button>
+                            </>
+                          ))}
                       </td>
                     </tr>
                   ))}

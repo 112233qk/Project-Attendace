@@ -14,10 +14,20 @@ const router = Router();
 router.use(authenticate);
 
 // Endpoint Check-in (Multipart/form-data, field foto: 'fotoMasuk')
-router.post("/check-in", upload.single("fotoMasuk"), checkIn);
+router.post(
+  "/check-in",
+  authorize("KARYAWAN", "HRD"),
+  upload.single("fotoMasuk"),
+  checkIn
+);
 
 // Endpoint Check-out (Multipart/form-data, field foto: 'fotoPulang')
-router.post("/check-out", upload.single("fotoPulang"), checkOut);
+router.post(
+  "/check-out",
+  authorize("KARYAWAN", "HRD"),
+  upload.single("fotoPulang"),
+  checkOut
+);
 
 // Endpoint Riwayat Absensi
 router.get(
@@ -27,7 +37,7 @@ router.get(
 );
 
 // Endpoint: Cek status presensi hari ini (Karyawan)
-router.get("/today", authorize("KARYAWAN"), getTodayAttendance);
+router.get("/today", authorize("KARYAWAN", "HRD"), getTodayAttendance);
 
 router.get(
   "/history",
