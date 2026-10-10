@@ -15,6 +15,7 @@ import reportRoutes from "./routes/reportRoutes";
 import seedRoutes from "./routes/seedRoutes";
 
 const app = express();
+app.set("trust proxy", 1);
 
 // ============================================
 // SECURITY HEADERS (Helmet)
