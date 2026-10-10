@@ -1,5 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
-import cors, { CorsOptions } from "cors"; // ← tambah CorsOptions
+import cors, { CorsOptions } from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import multer from "multer";
 import swaggerUi from "swagger-ui-express";
@@ -13,6 +15,52 @@ import reportRoutes from "./routes/reportRoutes";
 import seedRoutes from "./routes/seedRoutes";
 
 const app = express();
+
+// ============================================
+// SECURITY HEADERS (Helmet)
+// ============================================
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // izinkan akses foto upload
+    contentSecurityPolicy: false, // dimatikan agar Swagger UI berjalan
+  })
+);
+
+// ============================================
+// RATE LIMITING
+// ============================================
+// Global limiter: 100 request per 15 menit per IP
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    success: false,
+    message: "Terlalu banyak permintaan. Coba lagi setelah 15 menit.",
+    data: null,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Auth limiter: 10 request per 15 menit per IP (lebih ketat untuk login/register)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: "Terlalu banyak percobaan login. Coba lagi setelah 15 menit.",
+    data: null,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Terapkan global limiter (kecuali Swagger UI agar tetap bisa dibuka)
+app.use("/api", globalLimiter);
+
+// Terapkan auth limiter khusus untuk endpoint login & register
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
 
 // ============================================
 // CORS CONFIGURATION
