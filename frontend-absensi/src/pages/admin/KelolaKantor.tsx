@@ -166,8 +166,8 @@ export default function KelolaKantor() {
             Belum ada kantor terdaftar.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto max-w-full">
+            <table className="min-w-full text-left text-sm">
               <thead>
                 <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
                   <th className="py-3 px-4">Nama Kantor</th>

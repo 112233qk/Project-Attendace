@@ -102,22 +102,24 @@ export default function DashboardAdmin() {
       </header>
 
       {/* Tab Navigation */}
-      <nav className="bg-surface border-b border-line px-6">
-        <div className="max-w-7xl mx-auto flex gap-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-5 py-4 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-                activeTab === tab.key
-                  ? "border-blue text-blue"
-                  : "border-transparent text-muted hover:text-ink"
-              }`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+      <nav className="bg-surface border-b border-line w-full max-w-full overflow-hidden min-w-0">
+        <div className="max-w-7xl mx-auto w-full min-w-0 overflow-hidden">
+          <div className="flex gap-1 overflow-x-auto overscroll-x-contain whitespace-nowrap scrollbar-hide px-4 md:px-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 md:px-5 py-4 text-xs md:text-sm font-semibold border-b-2 transition-colors cursor-pointer shrink-0 ${
+                  activeTab === tab.key
+                    ? "border-blue text-blue"
+                    : "border-transparent text-muted hover:text-ink"
+                }`}
+              >
+                <span className="mr-1 md:mr-2">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
 

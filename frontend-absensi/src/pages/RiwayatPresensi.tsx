@@ -94,8 +94,8 @@ export default function RiwayatPresensi() {
               Belum ada riwayat presensi.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
+            <div className="overflow-x-auto max-w-full">
+              <table className="min-w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 font-semibold">
                     <th className="py-3 px-4">Tanggal</th>

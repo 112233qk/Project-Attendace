@@ -10,36 +10,40 @@ import Profil from "./pages/Profil";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
+    <div className="w-full max-w-full overflow-x-hidden">
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
 
-        {/* Route Karyawan & HRD — untuk absensi */}
-        <Route element={<ProtectedRoute allowedRoles={["KARYAWAN", "HRD"]} />}>
-          <Route path="/dashboard" element={<DashboardKaryawan />} />
-          <Route path="/riwayat" element={<RiwayatPresensi />} />
-          <Route path="/ajukan-izin" element={<AjukanIzin />} />
-          <Route path="/riwayat-izin" element={<RiwayatIzin />} />
-        </Route>
+          {/* Route Karyawan & HRD — untuk absensi */}
+          <Route
+            element={<ProtectedRoute allowedRoles={["KARYAWAN", "HRD"]} />}
+          >
+            <Route path="/dashboard" element={<DashboardKaryawan />} />
+            <Route path="/riwayat" element={<RiwayatPresensi />} />
+            <Route path="/ajukan-izin" element={<AjukanIzin />} />
+            <Route path="/riwayat-izin" element={<RiwayatIzin />} />
+          </Route>
 
-        {/* Route Admin/HRD — hanya untuk role ADMIN & HRD */}
-        <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HRD"]} />}>
-          <Route path="/admin" element={<DashboardAdmin />} />
-        </Route>
+          {/* Route Admin/HRD — hanya untuk role ADMIN & HRD */}
+          <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HRD"]} />}>
+            <Route path="/admin" element={<DashboardAdmin />} />
+          </Route>
 
-        {/* Route Profile (semua role) */}
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={["KARYAWAN", "HRD", "ADMIN"]} />
-          }
-        >
-          <Route path="/profil" element={<Profil />} />
-        </Route>
+          {/* Route Profile (semua role) */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={["KARYAWAN", "HRD", "ADMIN"]} />
+            }
+          >
+            <Route path="/profil" element={<Profil />} />
+          </Route>
 
-        {/* Catch-all: redirect ke login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Catch-all: redirect ke login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </div>
   );
 }
