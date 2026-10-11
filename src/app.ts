@@ -18,53 +18,17 @@ const app = express();
 app.set("trust proxy", 1);
 
 // ============================================
-// SECURITY HEADERS (Helmet)
+// 1. SECURITY HEADERS (Helmet)
 // ============================================
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // izinkan akses foto upload
-    contentSecurityPolicy: false, // dimatikan agar Swagger UI berjalan
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false,
   })
 );
 
 // ============================================
-// RATE LIMITING
-// ============================================
-// Global limiter: 100 request per 15 menit per IP
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: {
-    success: false,
-    message: "Terlalu banyak permintaan. Coba lagi setelah 15 menit.",
-    data: null,
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Auth limiter: 10 request per 15 menit per IP (lebih ketat untuk login/register)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: {
-    success: false,
-    message: "Terlalu banyak percobaan login. Coba lagi setelah 15 menit.",
-    data: null,
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Terapkan global limiter (kecuali Swagger UI agar tetap bisa dibuka)
-app.use("/api", globalLimiter);
-
-// Terapkan auth limiter khusus untuk endpoint login & register
-app.use("/api/auth/login", authLimiter);
-app.use("/api/auth/register", authLimiter);
-
-// ============================================
-// CORS CONFIGURATION
+// 2. CORS CONFIGURATION ← HARUS DI ATAS RATE LIMITER
 // ============================================
 const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
   .split(",")
@@ -75,15 +39,12 @@ const corsOptions: CorsOptions = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) => {
-    // Izinkan request tanpa origin (Postman, curl, server-to-server)
     if (!origin) return callback(null, true);
 
-    // Izinkan origin yang ada di whitelist
     if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
       return callback(null, true);
     }
 
-    // ⭐ Izinkan Railway URL sendiri (untuk Swagger UI)
     if (origin.endsWith(".up.railway.app") || origin.includes("localhost")) {
       return callback(null, true);
     }
@@ -100,16 +61,49 @@ const corsOptions: CorsOptions = {
 app.use(cors(corsOptions));
 
 // ============================================
-// BODY PARSER
+// 3. BODY PARSER
 // ============================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static folder untuk akses foto
+// ============================================
+// 4. RATE LIMITING ← SETELAH CORS
+// ============================================
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    success: false,
+    message: "Terlalu banyak permintaan. Coba lagi setelah 15 menit.",
+    data: null,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: "Terlalu banyak percobaan login. Coba lagi setelah 15 menit.",
+    data: null,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/api", globalLimiter);
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+
+// ============================================
+// 5. STATIC FOLDER
+// ============================================
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // ============================================
-// SWAGGER UI
+// 6. SWAGGER UI
 // ============================================
 app.use(
   "/api-docs",
@@ -126,7 +120,7 @@ app.get("/api-docs.json", (req, res) => {
 });
 
 // ============================================
-// ROUTES
+// 7. ROUTES
 // ============================================
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -137,7 +131,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/seed", seedRoutes);
 
 // ============================================
-// GLOBAL ERROR HANDLER
+// 8. GLOBAL ERROR HANDLER
 // ============================================
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {

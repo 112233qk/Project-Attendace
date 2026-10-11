@@ -43,10 +43,29 @@ export default function Login() {
       }
     } catch (err: unknown) {
       if (isAxiosError(err)) {
-        setError(
-          err.response?.data?.message ||
-            "Gagal masuk. Periksa email dan password Anda."
-        );
+        const status = err.response?.status;
+        const serverMessage = err.response?.data?.message;
+
+        // Handle per status code (fallback kalau body tidak sesuai)
+        if (status === 429) {
+          setError(
+            serverMessage ||
+              "Terlalu banyak percobaan login. Coba lagi setelah 15 menit."
+          );
+        } else if (status === 401) {
+          setError(serverMessage || "Email atau password salah.");
+        } else if (status === 403) {
+          setError(
+            serverMessage ||
+              "Akun Anda telah dinonaktifkan. Hubungi Admin untuk informasi lebih lanjut."
+          );
+        } else if (status === 400) {
+          setError(serverMessage || "Email dan password wajib diisi.");
+        } else {
+          setError(
+            serverMessage || "Gagal masuk. Periksa email dan password Anda."
+          );
+        }
       } else {
         setError("Terjadi kesalahan pada sistem.");
       }
