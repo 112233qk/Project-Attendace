@@ -16,20 +16,16 @@ const sendResponse = (
   return res.status(status).json({ success, message, data });
 };
 
-// Helper: Dapatkan waktu saat ini di zona WIB
-const getWIBTime = () => {
-  const now = new Date();
-  // Konversi ke WIB (UTC+7)
-  const wibTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-  return wibTime;
-};
-
-// Helper: Format tanggal tanpa waktu (YYYY-MM-DD)
+// Helper: Dapatkan tanggal WIB hari ini sebagai UTC midnight
+// Contoh: sekarang 12 Okt 2026 07:56 WIB → return 2026-10-12T00:00:00.000Z
 const getTodayDate = () => {
-  const now = getWIBTime();
-  // Gunakan slice(0, 10) untuk menghindari error noUncheckedIndexedAccess
-  const dateString = now.toISOString().slice(0, 10);
-  return new Date(dateString);
+  const now = new Date();
+  // Geser ke WIB untuk membaca tanggal WIB
+  const wibTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  const year = wibTime.getUTCFullYear();
+  const month = String(wibTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(wibTime.getUTCDate()).padStart(2, "0");
+  return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
 };
 
 // 1. ENDPOINT CHECK-IN
@@ -97,15 +93,16 @@ export const checkIn = async (req: Request, res: Response) => {
       );
     }
 
-    // 2. Validasi Waktu (Keterlambatan)
-    const nowWIB = getWIBTime();
-    // Gunakan ?. dan || untuk menangani kemungkinan undefined pada split
+    // 2. Validasi Waktu (Keterlambatan) — berdasarkan WIB
+    const nowUTC = new Date();
+    // Hitung waktu WIB untuk perbandingan
+    const wibTime = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
     const currentTimeString =
-      nowWIB.toISOString().split("T")[1]?.substring(0, 5) || "00:00";
+      String(wibTime.getUTCHours()).padStart(2, "0") +
+      ":" +
+      String(wibTime.getUTCMinutes()).padStart(2, "0");
     const statusMasuk =
-      currentTimeString > office.jamMasuk
-        ? StatusMasuk.TERLAMBAT
-        : StatusMasuk.TEPAT_WAKTU;
+      currentTimeString > office.jamMasuk ? "TERLAMBAT" : "TEPAT_WAKTU";
 
     // 3. Validasi Duplikasi Check-in
     const today = getTodayDate();
@@ -130,7 +127,7 @@ export const checkIn = async (req: Request, res: Response) => {
       data: {
         userId,
         tanggal: today,
-        jamMasuk: nowWIB,
+        jamMasuk: nowUTC,
         latMasuk: latNum,
         lngMasuk: lngNum,
         fotoMasuk,
@@ -199,12 +196,12 @@ export const checkOut = async (req: Request, res: Response) => {
     }
 
     const fotoPulang = req.file ? `/uploads/${req.file.filename}` : null;
-    const nowWIB = getWIBTime();
+    const nowUTC = new Date();
 
     const updatedAttendance = await prisma.attendance.update({
       where: { id: attendance.id },
       data: {
-        jamPulang: nowWIB,
+        jamPulang: nowUTC,
         latPulang: latNum,
         lngPulang: lngNum,
         fotoPulang,
