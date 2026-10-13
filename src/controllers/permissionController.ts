@@ -18,6 +18,16 @@ const sendResponse = (
   return res.status(status).json({ success, message, data });
 };
 
+// Helper: Dapatkan tanggal WIB hari ini sebagai UTC midnight
+const getTodayDate = (): Date => {
+  const now = new Date();
+  const wibTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  const year = wibTime.getUTCFullYear();
+  const month = String(wibTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(wibTime.getUTCDate()).padStart(2, "0");
+  return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+};
+
 // Normalisasi tanggal: buang bagian jam (00:00:00)
 const normalizeDate = (dateStr: string): Date => {
   const d = new Date(dateStr);
@@ -631,6 +641,49 @@ export const approvePermission = async (req: Request, res: Response) => {
         approver: { select: { id: true, nama: true, role: true } },
       },
     });
+
+    // ============================================
+    // AUTO CHECK-OUT (Emergency Scenario)
+    // ============================================
+    // Cek apakah hari ini user check-in tapi belum check-out
+    const today = getTodayDate();
+    const isTodayWithinPermission =
+      permission.tanggalMulai <= today && permission.tanggalSelesai >= today;
+
+    if (isTodayWithinPermission) {
+      const todayAttendance = await prisma.attendance.findFirst({
+        where: {
+          userId: permission.userId,
+          tanggal: today,
+          jamMasuk: { not: null },
+          jamPulang: null,
+        },
+      });
+
+      if (todayAttendance) {
+        const approvalTime = new Date();
+
+        await prisma.attendance.update({
+          where: { id: todayAttendance.id },
+          data: {
+            jamPulang: approvalTime,
+            keterangan: `${permission.jenis} disetujui, auto check-out`,
+          },
+        });
+
+        await logActivity({
+          req,
+          action: "UPDATE_ATTENDANCE",
+          entity: "attendances",
+          entityId: todayAttendance.id,
+          newValue: {
+            jamPulang: approvalTime,
+            keterangan: `${permission.jenis} disetujui, auto check-out`,
+          },
+          description: `Auto check-out user ${permission.userId} karena ${permission.jenis} disetujui.`,
+        });
+      }
+    }
 
     await logActivity({
       req,

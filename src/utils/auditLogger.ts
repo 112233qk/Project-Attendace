@@ -18,6 +18,7 @@ export type AuditAction =
   | "DELETE_PERMISSION"
   | "APPROVE_PERMISSION"
   | "REJECT_PERMISSION"
+  | "UPDATE_ATTENDANCE"
   | "EXPORT_REPORT";
 
 interface LogActivityParams {
