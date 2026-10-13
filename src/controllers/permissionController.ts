@@ -685,6 +685,56 @@ export const approvePermission = async (req: Request, res: Response) => {
       }
     }
 
+    // ============================================
+    // ISI KETERANGAN UNTUK SEMUA TANGGAL IZIN
+    // ============================================
+    // Loop setiap tanggal dalam rentang izin, isi keterangan di attendance
+    const jenisLabel = permission.jenis; // CUTI / SAKIT / IZIN
+    const startDate = new Date(permission.tanggalMulai);
+    const endDate = new Date(permission.tanggalSelesai);
+    const currentDate = new Date(startDate);
+
+    // Loop dari tanggalMulai sampai tanggalSelesai (inklusif)
+    while (currentDate <= endDate) {
+      // Clone tanggal supaya tidak termutasi di loop
+      const checkDate = new Date(currentDate);
+
+      // Cari attendance existing untuk user & tanggal ini
+      const existingAttendance = await prisma.attendance.findFirst({
+        where: {
+          userId: permission.userId,
+          tanggal: checkDate,
+        },
+      });
+
+      if (existingAttendance) {
+        // Update keterangan (jangan timpa auto check-out B3b)
+        // Hanya update kalau keterangan masih kosong atau bukan "auto check-out"
+        if (
+          !existingAttendance.keterangan ||
+          !existingAttendance.keterangan.includes("auto check-out")
+        ) {
+          await prisma.attendance.update({
+            where: { id: existingAttendance.id },
+            data: { keterangan: jenisLabel },
+          });
+        }
+      } else {
+        // Buat record attendance baru sebagai penanda hari izin
+        await prisma.attendance.create({
+          data: {
+            userId: permission.userId,
+            tanggal: checkDate,
+            keterangan: jenisLabel,
+            // jamMasuk, jamPulang, statusMasuk, metodeMasuk biarkan null
+          },
+        });
+      }
+
+      // Increment 1 hari
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+    }
+
     await logActivity({
       req,
       action: "APPROVE_PERMISSION",
@@ -693,6 +743,7 @@ export const approvePermission = async (req: Request, res: Response) => {
       newValue: { status: "APPROVED", approvedBy: actorId },
       description: `User ${actorId} menyetujui pengajuan ${permission.jenis} dari user ${permission.userId}.`,
     });
+    ``;
 
     return sendResponse(
       res,
