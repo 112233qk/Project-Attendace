@@ -78,6 +78,7 @@ model Attendance {
   fotoPulang  String?      @map("foto_pulang") @db.VarChar(255)
   statusMasuk StatusMasuk? @map("status_masuk")
   metodeMasuk MetodeMasuk? @map("metode_masuk")
+  keterangan  String?      @db.Text
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 

@@ -119,10 +119,31 @@ export const checkIn = async (req: Request, res: Response) => {
       );
     }
 
-    // 4. Simpan Foto
+    // 4. Validasi: Blokir jika user sedang dalam izin/cuti APPROVED hari ini
+    const approvedPermission = await prisma.permission.findFirst({
+      where: {
+        userId,
+        status: "APPROVED",
+        tanggalMulai: { lte: today },
+        tanggalSelesai: { gte: today },
+      },
+      orderBy: { tanggalMulai: "desc" },
+    });
+
+    if (approvedPermission) {
+      const jenisLabel = approvedPermission.jenis; // IZIN / SAKIT / CUTI
+      return sendResponse(
+        res,
+        400,
+        false,
+        `Anda sedang dalam masa ${jenisLabel} yang telah disetujui. Tidak dapat melakukan check-in.`
+      );
+    }
+
+    // 5. Simpan Foto
     const fotoMasuk = req.file ? `/uploads/${req.file.filename}` : null;
 
-    // 5. Simpan ke Database
+    // 6. Simpan ke Database
     const attendance = await prisma.attendance.create({
       data: {
         userId,
