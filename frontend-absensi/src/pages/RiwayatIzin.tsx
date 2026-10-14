@@ -20,25 +20,33 @@ const formatDate = (iso: string): string => {
   const day = String(d.getUTCDate()).padStart(2, "0");
   const month = String(d.getUTCMonth() + 1).padStart(2, "0");
   const year = d.getUTCFullYear();
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 };
 
 const getStatusBadge = (status: string) => {
-  const colors: Record<string, string> = {
-    PENDING: "bg-yellow-50 text-yellow-600 border-yellow-100",
-    APPROVED: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    REJECTED: "bg-red-50 text-red-600 border-red-100",
-  };
-  return colors[status] || "bg-gray-50 text-gray-600 border-gray-100";
+  switch (status) {
+    case "PENDING":
+      return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+    case "APPROVED":
+      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+    case "REJECTED":
+      return "bg-red-500/20 text-red-300 border-red-500/30";
+    default:
+      return "bg-surface-soft text-ink-3 border-line";
+  }
 };
 
 const getJenisBadge = (jenis: string) => {
-  const colors: Record<string, string> = {
-    IZIN: "bg-blue-50 text-blue-600 border-blue-100",
-    SAKIT: "bg-red-50 text-red-600 border-red-100",
-    CUTI: "bg-violet-50 text-violet-600 border-violet-100",
-  };
-  return colors[jenis] || "bg-gray-50 text-gray-600 border-gray-100";
+  switch (jenis) {
+    case "IZIN":
+      return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+    case "SAKIT":
+      return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+    case "CUTI":
+      return "bg-violet-500/20 text-violet-300 border-violet-500/30";
+    default:
+      return "bg-surface-soft text-ink-3 border-line";
+  }
 };
 
 export default function RiwayatIzin() {
@@ -146,7 +154,7 @@ export default function RiwayatIzin() {
                 <thead>
                   <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
                     <th className="py-3 px-4">Jenis</th>
-                    <th className="py-3 px-4">Periode</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Periode</th>
                     <th className="py-3 px-4">Alasan</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4 text-right">Aksi</th>
@@ -164,7 +172,7 @@ export default function RiwayatIzin() {
                           {p.jenis}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-xs text-muted">
+                      <td className="py-3 px-4 text-xs text-muted whitespace-nowrap">
                         {formatDate(p.tanggalMulai)} —{" "}
                         {formatDate(p.tanggalSelesai)}
                       </td>
@@ -194,7 +202,7 @@ export default function RiwayatIzin() {
                         {p.status === "PENDING" && (
                           <button
                             onClick={() => setCancelTarget(p)}
-                            className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 cursor-pointer"
+                            className="px-3 py-1.5 text-xs font-semibold bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 cursor-pointer"
                           >
                             Batalkan
                           </button>
@@ -211,9 +219,9 @@ export default function RiwayatIzin() {
 
       {/* Cancel Confirm Modal */}
       {cancelTarget && (
-        <div className="fixed inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-surface rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5">
-            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto">
               <span className="text-2xl">⚠️</span>
             </div>
             <div className="text-center space-y-2">

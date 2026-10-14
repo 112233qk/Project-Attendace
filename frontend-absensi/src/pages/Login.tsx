@@ -75,7 +75,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ink via-ink-2 to-ink-3 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-surface via-surface-soft to-ink-deep flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-surface rounded-3xl shadow-2xl p-10 space-y-8 border border-line/50">
         {/* Logo / Brand */}
         <div className="text-center space-y-3">
@@ -89,7 +89,7 @@ export default function Login() {
         </div>
 
         {error && (
-          <div className="p-4 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
+          <div className="p-4 text-sm text-red-300 bg-red-500/20 rounded-xl border border-red-500/30">
             {error}
           </div>
         )}
@@ -136,7 +136,7 @@ export default function Login() {
                 {showPassword ? (
                   // Mata terbuka
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
+                    xmlns="http://www.w3.org0/svg"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -151,7 +151,7 @@ export default function Login() {
                 ) : (
                   // Mata tertutup (dengan garis miring)
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
+                    xmlns="http://www.w3.org0/svg"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

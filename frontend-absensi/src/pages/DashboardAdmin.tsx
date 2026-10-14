@@ -50,7 +50,7 @@ export default function DashboardAdmin() {
   return (
     <div className="min-h-screen bg-surface-soft flex flex-col">
       {/* Header — Tema Gelap Aridev */}
-      <header className="bg-ink border-b border-ink-3 px-6 py-4 shadow-lg">
+      <header className="bg-ink-deep border-b border-line px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           {/* Brand */}
           <div className="flex items-center gap-3">

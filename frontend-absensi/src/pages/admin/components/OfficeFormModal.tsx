@@ -194,7 +194,7 @@ export default function OfficeFormModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="px-6 py-5 border-b border-line flex justify-between items-center sticky top-0 bg-surface z-10">
@@ -212,16 +212,16 @@ export default function OfficeFormModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Peringatan Mobile */}
           {isMobile && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl space-y-2">
+            <div className="p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl space-y-2">
               <div className="flex gap-3 items-start">
                 <span className="text-xl shrink-0">📱</span>
-                <div className="text-xs text-yellow-800 space-y-1">
+                <div className="text-xs text-yellow-200 space-y-1">
                   <p className="font-bold">Form ini lebih nyaman di Desktop</p>
                   <p>
                     Mengambil koordinat di HP lebih sulit. Disarankan buka
                     halaman ini dari desktop/laptop untuk pengalaman terbaik.
                   </p>
-                  <p className="text-yellow-700">
+                  <p className="text-yellow-300">
                     Jika tetap ingin lanjut dari HP: buka aplikasi Google Maps,
                     long-press titik lokasi, share link ke diri sendiri, lalu
                     buka link di desktop untuk copy koordinatnya.
@@ -232,7 +232,7 @@ export default function OfficeFormModal({
           )}
 
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
+            <div className="p-3 text-sm text-red-300 bg-red-500/20 rounded-xl border border-red-500/30">
               {error}
             </div>
           )}
@@ -253,14 +253,14 @@ export default function OfficeFormModal({
           </div>
 
           {/* Hint Cara Dapat Koordinat */}
-          <div className="p-4 bg-surface-blue rounded-xl space-y-3 border border-blue-100">
+          <div className="p-4 bg-surface-blue rounded-xl space-y-3 border border-blue-500/30">
             <div className="flex items-center gap-2">
               <span className="text-lg">📍</span>
-              <p className="text-sm font-bold text-blue-800">
+              <p className="text-sm font-bold text-blue-200">
                 Cara Mendapatkan Koordinat
               </p>
             </div>
-            <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside pl-1">
+            <ol className="text-xs text-blue-200 space-y-1 list-decimal list-inside pl-1">
               <li>Buka Google Maps (klik tombol di bawah)</li>
               <li>Cari lokasi/alamat kantor</li>
               <li>

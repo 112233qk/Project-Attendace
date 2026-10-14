@@ -20,19 +20,19 @@ const STYLES: Record<
   { bg: string; border: string; icon: string; progressColor: string }
 > = {
   success: {
-    bg: "bg-white",
-    border: "border-emerald-200",
+    bg: "bg-surface",
+    border: "border-emerald-500/30",
     icon: "✅",
     progressColor: "bg-emerald-500",
   },
   error: {
-    bg: "bg-white",
-    border: "border-red-200",
+    bg: "bg-surface",
+    border: "border-red-500/30",
     icon: "⚠️",
     progressColor: "bg-red-500",
   },
   info: {
-    bg: "bg-white",
+    bg: "bg-surface",
     border: "border-blue-200",
     icon: "ℹ️",
     progressColor: "bg-blue-500",

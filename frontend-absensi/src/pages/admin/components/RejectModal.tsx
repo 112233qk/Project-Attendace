@@ -51,9 +51,9 @@ export default function RejectModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5">
-        <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto">
+        <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto">
           <span className="text-2xl">❌</span>
         </div>
 
@@ -69,7 +69,7 @@ export default function RejectModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
+            <div className="p-3 text-sm text-red-300 bg-red-500/20 rounded-xl border border-red-500/30">
               {error}
             </div>
           )}

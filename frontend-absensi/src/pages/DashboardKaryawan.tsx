@@ -200,8 +200,8 @@ export default function DashboardKaryawan() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-ink border-b border-ink-3 px-6 py-4 shadow-lg">
+    <div className="min-h-screen bg-surface-soft flex flex-col">
+      <header className="bg-ink-deep border-b border-line px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           {/* Brand */}
           <div className="flex items-center gap-3">
@@ -225,7 +225,6 @@ export default function DashboardKaryawan() {
           </div>
 
           {/* Actions */}
-
           <div className="flex gap-2 flex-wrap">
             {user?.role === "HRD" && (
               <button
@@ -265,8 +264,8 @@ export default function DashboardKaryawan() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-6 space-y-6">
         {/* Card: Jam & Lokasi */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">
+        <div className="bg-surface rounded-2xl p-6 shadow-sm border border-line text-center">
+          <p className="text-sm font-medium text-muted uppercase tracking-wider mb-1">
             {currentTime.toLocaleDateString("id-ID", {
               weekday: "long",
               day: "numeric",
@@ -274,44 +273,42 @@ export default function DashboardKaryawan() {
               year: "numeric",
             })}
           </p>
-          <div className="text-4xl md:text-5xl font-extrabold text-blue-600 tracking-tight my-2">
+          <div className="text-4xl md:text-5xl font-extrabold text-blue-2 tracking-tight my-2">
             {currentTime.toLocaleTimeString("id-ID")}
           </div>
           {location ? (
-            <p className="text-xs text-emerald-600 font-medium flex items-center justify-center gap-1 mt-2">
+            <p className="text-xs text-emerald-400 font-medium flex items-center justify-center gap-1 mt-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span>
               Lokasi Terdeteksi ({location.lat.toFixed(4)},{" "}
               {location.lng.toFixed(4)})
             </p>
           ) : locationError ? (
-            <p className="text-xs text-red-500 mt-2">{locationError}</p>
+            <p className="text-xs text-red-400 mt-2">{locationError}</p>
           ) : (
-            <p className="text-xs text-gray-400 animate-pulse mt-2">
+            <p className="text-xs text-muted animate-pulse mt-2">
               Mendapatkan lokasi GPS...
             </p>
           )}
         </div>
 
         {/* Card: Status Presensi */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
-          <h2 className="text-lg font-bold text-gray-800 border-b pb-3">
+        <div className="bg-surface rounded-2xl p-6 shadow-sm border border-line space-y-6">
+          <h2 className="text-lg font-bold text-ink border-b border-line pb-3">
             Presensi Hari Ini
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-100">
-              <p className="text-xs font-semibold text-blue-600">
-                Jam Check-in
-              </p>
-              <p className="text-xl font-bold text-gray-800 mt-1">
+            <div className="p-4 rounded-xl bg-surface-blue border border-line">
+              <p className="text-xs font-semibold text-blue-2">Jam Check-in</p>
+              <p className="text-xl font-bold text-ink mt-1">
                 {status.checkInTime || "-- : --"}
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-orange-50/50 border border-orange-100">
-              <p className="text-xs font-semibold text-orange-600">
+            <div className="p-4 rounded-xl bg-surface-blue border border-line">
+              <p className="text-xs font-semibold text-orange-400">
                 Jam Check-out
               </p>
-              <p className="text-xl font-bold text-gray-800 mt-1">
+              <p className="text-xl font-bold text-ink mt-1">
                 {status.checkOutTime || "-- : --"}
               </p>
             </div>
@@ -319,7 +316,7 @@ export default function DashboardKaryawan() {
 
           {/* Check-in */}
           <div className="space-y-3 pt-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-ink-3">
               1. Ambil Foto Check-in
             </label>
             <input
@@ -328,14 +325,14 @@ export default function DashboardKaryawan() {
               accept="image/*"
               capture="user"
               disabled={status.hasCheckedIn || loading}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
+              className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30 disabled:opacity-50"
             />
             <button
               onClick={handleCheckIn}
               disabled={status.hasCheckedIn || loading}
               className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
                 status.hasCheckedIn
-                  ? "bg-gray-300 cursor-not-allowed"
+                  ? "bg-ink-3/40 cursor-not-allowed"
                   : "bg-emerald-600 hover:bg-emerald-700 active:scale-98"
               }`}
             >
@@ -348,8 +345,8 @@ export default function DashboardKaryawan() {
           </div>
 
           {/* Check-out */}
-          <div className="space-y-3 pt-4 border-t">
-            <label className="block text-sm font-medium text-gray-700">
+          <div className="space-y-3 pt-4 border-t border-line">
+            <label className="block text-sm font-medium text-ink-3">
               2. Ambil Foto Check-out
             </label>
             <input
@@ -358,14 +355,14 @@ export default function DashboardKaryawan() {
               accept="image/*"
               capture="user"
               disabled={!status.hasCheckedIn || status.hasCheckedOut || loading}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 disabled:opacity-50"
+              className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-500/20 file:text-orange-300 hover:file:bg-orange-500/30 disabled:opacity-50"
             />
             <button
               onClick={handleCheckOut}
               disabled={!status.hasCheckedIn || status.hasCheckedOut || loading}
               className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
                 !status.hasCheckedIn || status.hasCheckedOut
-                  ? "bg-gray-300 cursor-not-allowed"
+                  ? "bg-ink-3/40 cursor-not-allowed"
                   : "bg-orange-600 hover:bg-orange-700 active:scale-98"
               }`}
             >

@@ -100,10 +100,10 @@ export default function Profil() {
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
       ADMIN: "bg-violet-50 text-violet-600 border-violet-100",
-      HRD: "bg-blue-50 text-blue-600 border-blue-100",
-      KARYAWAN: "bg-emerald-50 text-emerald-600 border-emerald-100",
+      HRD: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+      KARYAWAN: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
     };
-    return colors[role] || "bg-gray-50 text-gray-600 border-gray-100";
+    return colors[role] || "bg-surface-soft text-muted border-line";
   };
 
   if (loading) {
@@ -144,12 +144,12 @@ export default function Profil() {
       <main className="flex-1 max-w-3xl w-full mx-auto p-6 space-y-6">
         {/* Alerts */}
         {error && (
-          <div className="p-4 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
+          <div className="p-4 text-sm text-red-300 bg-red-500/20 rounded-xl border border-red-500/30">
             {error}
           </div>
         )}
         {success && (
-          <div className="p-4 text-sm text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center gap-3">
+          <div className="p-4 text-sm text-emerald-300 bg-emerald-500/20 rounded-xl border border-emerald-500/30 flex items-center gap-3">
             <span className="text-lg">✅</span>
             <span>{success}</span>
           </div>

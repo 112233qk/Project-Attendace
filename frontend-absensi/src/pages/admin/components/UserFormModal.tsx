@@ -139,7 +139,7 @@ export default function UserFormModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-5 border-b border-line flex justify-between items-center">
           <h3 className="text-lg font-display font-bold text-ink">
@@ -155,7 +155,7 @@ export default function UserFormModal({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
+            <div className="p-3 text-sm text-red-300 bg-red-500/20 rounded-xl border border-red-500/30">
               {error}
             </div>
           )}

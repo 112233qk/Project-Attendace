@@ -44,6 +44,17 @@ const getToday = (): string => {
   return wib.toISOString().split("T")[0]!;
 };
 
+// Format tanggal untuk tampilan: "2026-10-13" → "13/10/2026"
+const formatDate = (iso: string): string => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 export default function ExportLaporan() {
   const toast = useToast();
   const [tanggalMulai, setTanggalMulai] = useState(getFirstDayOfMonth());
@@ -180,8 +191,8 @@ export default function ExportLaporan() {
 
   const getStatusBadge = (status: string) => {
     return status === "TEPAT_WAKTU"
-      ? "bg-emerald-50 text-emerald-600"
-      : "bg-red-50 text-red-600";
+      ? "bg-emerald-500/20 text-emerald-300"
+      : "bg-red-500/20 text-red-300";
   };
 
   return (
@@ -197,7 +208,7 @@ export default function ExportLaporan() {
       </div>
 
       {error && (
-        <div className="p-4 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
+        <div className="p-4 text-sm text-red-300 bg-red-500/20 rounded-xl border border-red-500/30">
           {error}
         </div>
       )}
@@ -309,7 +320,7 @@ export default function ExportLaporan() {
               <p className="text-xs font-semibold text-muted uppercase">
                 Tepat Waktu
               </p>
-              <p className="text-3xl font-display font-extrabold text-emerald-600 mt-2">
+              <p className="text-3xl font-display font-extrabold text-emerald-300 mt-2">
                 {preview.recap.totalTepatWaktu}
               </p>
             </div>
@@ -339,8 +350,8 @@ export default function ExportLaporan() {
                   Preview Data
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  Periode {preview.periode.mulai} — {preview.periode.selesai} ·{" "}
-                  {preview.officeFilter}
+                  Periode {formatDate(preview.periode.mulai)} —{" "}
+                  {formatDate(preview.periode.selesai)} · {preview.officeFilter}
                 </p>
               </div>
               <span className="text-xs text-muted">
@@ -360,7 +371,7 @@ export default function ExportLaporan() {
                       <th className="py-2.5 px-4">NIK</th>
                       <th className="py-2.5 px-4">Nama</th>
                       <th className="py-2.5 px-4">Kantor</th>
-                      <th className="py-2.5 px-4">Tanggal</th>
+                      <th className="py-2.5 px-4 whitespace-nowrap">Tanggal</th>
                       <th className="py-2.5 px-4">Masuk</th>
                       <th className="py-2.5 px-4">Status</th>
                       <th className="py-2.5 px-4">Pulang</th>
@@ -376,8 +387,10 @@ export default function ExportLaporan() {
                           {r.nama}
                         </td>
                         <td className="py-2.5 px-4 text-muted">{r.kantor}</td>
-                        <td className="py-2.5 px-4">{r.tanggal}</td>
-                        <td className="py-2.5 px-4 text-emerald-600 font-medium">
+                        <td className="py-2.5 px-4 whitespace-nowrap">
+                          {formatDate(r.tanggal)}
+                        </td>
+                        <td className="py-2.5 px-4 text-emerald-300 font-medium">
                           {r.jamMasuk}
                         </td>
                         <td className="py-2.5 px-4">

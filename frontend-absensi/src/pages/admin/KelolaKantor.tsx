@@ -172,7 +172,9 @@ export default function KelolaKantor() {
                 <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
                   <th className="py-3 px-4">Nama Kantor</th>
                   <th className="py-3 px-4">Koordinat</th>
-                  <th className="py-3 px-4">Radius</th>
+                  <th className="py-3 px-4 whitespace-nowrap min-w-[70px]">
+                    Radius
+                  </th>
                   <th className="py-3 px-4">Jam Kerja</th>
                   <th className="py-3 px-4">Karyawan</th>
                   <th className="py-3 px-4 text-right">Aksi</th>
@@ -185,8 +187,8 @@ export default function KelolaKantor() {
                     <td className="py-3 px-4 font-mono text-xs text-muted">
                       {o.latitude.toFixed(4)}, {o.longitude.toFixed(4)}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2.5 py-1 text-xs font-semibold bg-surface-blue text-blue rounded-full">
+                    <td className="py-3 px-4 whitespace-nowrap min-w-[70px]">
+                      <span className="inline-flex items-center whitespace-nowrap shrink-0 px-2.5 py-1 text-xs font-semibold bg-surface-blue text-blue rounded-full">
                         {o.radius} m
                       </span>
                     </td>
@@ -202,14 +204,14 @@ export default function KelolaKantor() {
                     <td className="py-3 px-4 text-right space-x-2">
                       <button
                         onClick={() => handleEdit(o)}
-                        className="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 cursor-pointer"
+                        className="px-3 py-1.5 text-xs font-semibold bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 cursor-pointer"
                       >
                         Edit
                       </button>
                       {currentUserRole === "ADMIN" && (
                         <button
                           onClick={() => handleDelete(o)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 cursor-pointer"
+                          className="px-3 py-1.5 text-xs font-semibold bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 cursor-pointer"
                         >
                           Hapus
                         </button>
@@ -235,9 +237,9 @@ export default function KelolaKantor() {
 
       {/* Delete Confirm Modal */}
       {isDeleteOpen && deleteTarget && (
-        <div className="fixed inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-surface rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5">
-            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto">
               <span className="text-2xl">⚠️</span>
             </div>
 
@@ -250,7 +252,7 @@ export default function KelolaKantor() {
                 akan dihapus permanen.
               </p>
               {(deleteTarget._count?.users ?? 0) > 0 && (
-                <div className="mt-3 p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-600 text-left">
+                <div className="mt-3 p-3 bg-red-500/20 rounded-xl border border-red-500/30 text-xs text-red-300 text-left">
                   ⚠️ Kantor ini masih memiliki{" "}
                   <strong>{deleteTarget._count?.users} karyawan</strong>{" "}
                   terkait. Pindahkan mereka terlebih dahulu.

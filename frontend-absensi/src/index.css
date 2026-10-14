@@ -1,31 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  /* Warna Aridev Studio */
-  --color-ink: #07111f;
-  --color-ink-2: #101c2f;
-  --color-ink-3: #24324a;
-  --color-muted: #68758a;
-  --color-line: #dfe5ee;
-  --color-surface: #ffffff;
-  --color-surface-soft: #f4f7fb;
-  --color-surface-blue: #eef4ff;
+  /* Teks — semua terang (untuk dark mode) */
+  --color-ink: #f5f7fa; /* teks utama */
+  --color-ink-2: #cbd2dc; /* teks sekunder */
+  --color-ink-3: #9aa3b2; /* teks tersier */
+  --color-muted: #6b7280; /* muted */
+
+  /* Surface — gelap */
+  --color-line: #1f2430;
+  --color-surface: #0f1218;
+  --color-surface-soft: #161a22;
+  --color-surface-blue: #14203a;
+
+  /* Deep — untuk header/footer gelap */
+  --color-ink-deep: #07090d;
+
+  /* Aksen biru Aridev — tetap */
   --color-blue: #2864ff;
   --color-blue-2: #5b8cff;
   --color-blue-dark: #1645cf;
   --color-violet: #7857ff;
   --color-green: #19a974;
 
-  /* Font */
   --font-display: "Plus Jakarta Sans", sans-serif;
   --font-body: "Manrope", sans-serif;
 
-  /* Radius */
   --radius-sm: 12px;
   --radius: 20px;
   --radius-lg: 32px;
 }
-
 /* Base Styles */
 body {
   font-family: var(--font-body);

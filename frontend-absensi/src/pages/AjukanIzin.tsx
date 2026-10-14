@@ -121,7 +121,7 @@ export default function AjukanIzin() {
       <main className="flex-1 max-w-2xl w-full mx-auto p-6">
         <div className="bg-surface rounded-3xl shadow-sm border border-line p-8 space-y-6">
           {success && (
-            <div className="p-4 text-sm text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center gap-3">
+            <div className="p-4 text-sm text-emerald-300 bg-emerald-500/20 rounded-xl border border-emerald-500/30 flex items-center gap-3">
               <span className="text-lg">✅</span>
               <div>
                 <p className="font-semibold">Pengajuan berhasil dikirim!</p>
@@ -133,7 +133,7 @@ export default function AjukanIzin() {
           )}
 
           {error && (
-            <div className="p-4 text-sm text-red-600 bg-red-50 rounded-xl border border-red-200">
+            <div className="p-4 text-sm text-red-300 bg-red-500/20 rounded-xl border border-red-500/30">
               {error}
             </div>
           )}
@@ -226,7 +226,7 @@ export default function AjukanIzin() {
                 ref={fileRef}
                 type="file"
                 accept="image/*,application/pdf"
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer"
+                className="block w-full text-sm text-muted file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30 file:cursor-pointer"
               />
               <p className="text-xs text-muted mt-1">
                 Format: JPG, PNG, atau PDF. Maksimal 5MB.

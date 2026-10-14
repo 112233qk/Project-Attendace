@@ -8,6 +8,7 @@ interface AttendanceRecord {
   jamMasuk: string | null;
   jamPulang: string | null;
   statusMasuk: string | null;
+  keterangan: string | null;
   user?: {
     nama: string;
     nik: string;
@@ -138,7 +139,8 @@ export default function RekapHariIni() {
                   <th className="py-3 px-4">Nama</th>
                   <th className="py-3 px-4">Check-in</th>
                   <th className="py-3 px-4">Check-out</th>
-                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Keterangan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -156,16 +158,19 @@ export default function RekapHariIni() {
                     <td className="py-3 px-4 text-orange-500 font-medium">
                       {formatTime(r.jamPulang)}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <span
                         className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
                           r.statusMasuk === "TEPAT_WAKTU"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-red-50 text-red-600 border-red-100"
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                            : "bg-red-500/20 text-red-300 border-red-500/30"
                         }`}
                       >
                         {r.statusMasuk || "-"}
                       </span>
+                    </td>
+                    <td className="py-3 px-4 text-muted whitespace-nowrap">
+                      {r.keterangan || "-"}
                     </td>
                   </tr>
                 ))}

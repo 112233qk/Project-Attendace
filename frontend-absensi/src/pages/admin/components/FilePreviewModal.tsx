@@ -20,7 +20,7 @@ export default function FilePreviewModal({
 
   return (
     <div
-      className="fixed inset-0 bg-ink/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
       onClick={onClose}
     >
       <div

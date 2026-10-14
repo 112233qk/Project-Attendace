@@ -42,7 +42,7 @@ const formatDate = (iso: string): string => {
   const day = String(d.getUTCDate()).padStart(2, "0");
   const month = String(d.getUTCMonth() + 1).padStart(2, "0");
   const year = d.getUTCFullYear();
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 };
 
 const BASE_URL =
@@ -151,20 +151,20 @@ export default function ApprovalIzin() {
 
   const getJenisBadge = (jenis: string) => {
     const colors: Record<string, string> = {
-      IZIN: "bg-blue-50 text-blue-600 border-blue-100",
-      SAKIT: "bg-red-50 text-red-600 border-red-100",
-      CUTI: "bg-violet-50 text-violet-600 border-violet-100",
+      IZIN: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+      SAKIT: "bg-red-500/20 text-red-300 border-red-500/30",
+      CUTI: "bg-violet-500/20 text-violet-300 border-violet-500/30",
     };
-    return colors[jenis] || "bg-gray-50 text-gray-600 border-gray-100";
+    return colors[jenis] || "bg-surface-soft text-muted border-line";
   };
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
-      PENDING: "bg-yellow-50 text-yellow-600 border-yellow-100",
-      APPROVED: "bg-emerald-50 text-emerald-600 border-emerald-100",
-      REJECTED: "bg-red-50 text-red-600 border-red-100",
+      PENDING: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+      APPROVED: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+      REJECTED: "bg-red-500/20 text-red-300 border-red-500/30",
     };
-    return colors[status] || "bg-gray-50 text-gray-600 border-gray-100";
+    return colors[status] || "bg-surface-soft text-muted border-line";
   };
 
   return (
@@ -231,7 +231,7 @@ export default function ApprovalIzin() {
                   <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
                     <th className="py-3 px-4">Karyawan</th>
                     <th className="py-3 px-4">Jenis</th>
-                    <th className="py-3 px-4">Periode</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Periode</th>
                     <th className="py-3 px-4">Alasan</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4 text-right">Aksi</th>
@@ -255,7 +255,7 @@ export default function ApprovalIzin() {
                           {p.jenis}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-xs text-muted">
+                      <td className="py-3 px-4 text-xs text-muted whitespace-nowrap">
                         {formatDate(p.tanggalMulai)} —{" "}
                         {formatDate(p.tanggalSelesai)}
                       </td>
@@ -276,14 +276,14 @@ export default function ApprovalIzin() {
                       <td className="py-3 px-4 text-right space-x-2 whitespace-nowrap">
                         <button
                           onClick={() => setDetailTarget(p)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
+                          className="px-3 py-1.5 text-xs font-semibold bg-surface-soft text-ink-3 rounded-lg hover:bg-line cursor-pointer"
                         >
                           Detail
                         </button>
                         {p.status === "PENDING" &&
                           (p.userId === currentUserId ? (
                             // Pengajuan milik sendiri → tampilkan label
-                            <span className="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-500 rounded-lg italic">
+                            <span className="px-3 py-1.5 text-xs font-semibold bg-surface-soft text-muted rounded-lg italic">
                               Menunggu HRD/Admin lain
                             </span>
                           ) : (
@@ -291,13 +291,13 @@ export default function ApprovalIzin() {
                             <>
                               <button
                                 onClick={() => handleApproveClick(p)}
-                                className="px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 cursor-pointer"
+                                className="px-3 py-1.5 text-xs font-semibold bg-emerald-500/20 text-emerald-300 rounded-lg hover:bg-emerald-500/30 cursor-pointer"
                               >
                                 ✓ Setujui
                               </button>
                               <button
                                 onClick={() => handleRejectClick(p)}
-                                className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 cursor-pointer"
+                                className="px-3 py-1.5 text-xs font-semibold bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 cursor-pointer"
                               >
                                 ✗ Tolak
                               </button>
@@ -369,7 +369,7 @@ export default function ApprovalIzin() {
 
       {/* Detail Modal */}
       {detailTarget && (
-        <div className="fixed inset-0 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-surface rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-5 border-b border-line flex justify-between items-center">
               <h3 className="text-lg font-display font-bold text-ink">
@@ -454,7 +454,7 @@ export default function ApprovalIzin() {
                 detailTarget.rejectionReason && (
                   <div>
                     <p className="text-xs text-muted mb-1">Alasan Penolakan</p>
-                    <p className="text-red-600 bg-red-50 p-3 rounded-xl border border-red-100">
+                    <p className="text-red-300 bg-red-500/20 p-3 rounded-xl border border-red-500/30">
                       {detailTarget.rejectionReason}
                     </p>
                   </div>

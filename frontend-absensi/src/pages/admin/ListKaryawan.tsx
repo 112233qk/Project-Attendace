@@ -249,8 +249,8 @@ export default function ListKaryawan() {
                             u.role === "ADMIN"
                               ? "bg-violet-50 text-violet-600 border-violet-100"
                               : u.role === "HRD"
-                              ? "bg-blue-50 text-blue-600 border-blue-100"
-                              : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                              : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                           }`}
                         >
                           {u.role}
@@ -263,8 +263,8 @@ export default function ListKaryawan() {
                         <span
                           className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
                             u.isActive
-                              ? "bg-emerald-50 text-emerald-600"
-                              : "bg-gray-100 text-gray-500"
+                              ? "bg-emerald-500/20 text-emerald-300"
+                              : "bg-surface-soft text-muted"
                           }`}
                         >
                           {u.isActive ? "Aktif" : "Nonaktif"}
@@ -273,14 +273,14 @@ export default function ListKaryawan() {
                       <td className="py-3 px-4 text-right space-x-2">
                         <button
                           onClick={() => handleEdit(u)}
-                          className="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 cursor-pointer"
+                          className="px-3 py-1.5 text-xs font-semibold bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 cursor-pointer"
                         >
                           Edit
                         </button>
                         {u.isActive && (
                           <button
                             onClick={() => handleDelete(u)}
-                            className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 cursor-pointer"
+                            className="px-3 py-1.5 text-xs font-semibold bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 cursor-pointer"
                           >
                             Nonaktifkan
                           </button>
