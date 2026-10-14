@@ -75,11 +75,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface via-surface-soft to-ink-deep flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-surface rounded-3xl shadow-2xl p-10 space-y-8 border border-line/50">
+    <div className="min-h-screen bg-[linear-gradient(135deg,_#07090d_0%,_#0f1218_50%,_#1e3a8a_100%)] flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-surface rounded-3xl shadow-2xl shadow-white/5 p-10 space-y-8 border border-white/25 ring-1 ring-white/5">
         {/* Logo / Brand */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 bg-blue rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-blue/30">
+          <div className="w-16 h-16 bg-blue rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-blue/30 ">
             <span className="text-white text-2xl font-bold">A</span>
           </div>
           <h1 className="text-3xl font-display font-extrabold text-ink tracking-tight">
