@@ -121,7 +121,6 @@
  *                 default: KARYAWAN
  *                 example: HRD
  *               officeId: { type: integer, nullable: true, example: 1 }
- *               fotoProfil: { type: string, nullable: true }
  *     responses:
  *       201:
  *         description: User berhasil dibuat
@@ -177,7 +176,6 @@
  *             type: object
  *             properties:
  *               nama: { type: string, example: 'Budi Updated' }
- *               fotoProfil: { type: string, nullable: true, example: '/uploads/profil/budi.jpg' }
  *     responses:
  *       200:
  *         description: Profil berhasil diperbarui
@@ -267,7 +265,7 @@
  *       - Users
  *     summary: Update user by ID (HRD & Admin)
  *     description: |
- *       Update data user. Field yang boleh diupdate: nik, nama, email, role, officeId, fotoProfil, isActive, dan password.
+ *       Update data user. Field yang boleh diupdate: nik, nama, email, role, officeId, isActive, dan password.
  *
  *       **Batasan:**
  *       - HRD hanya bisa update KARYAWAN
@@ -292,7 +290,6 @@
  *               password: { type: string, format: password, minLength: 6 }
  *               role: { type: string, enum: [KARYAWAN, HRD, ADMIN] }
  *               officeId: { type: integer, nullable: true }
- *               fotoProfil: { type: string, nullable: true }
  *               isActive: { type: boolean }
  *     responses:
  *       200:

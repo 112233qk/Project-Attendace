@@ -136,7 +136,6 @@
  *                         email: { type: string, example: admin@test.com }
  *                         role: { type: string, example: ADMIN }
  *                         officeId: { type: integer, nullable: true, example: null }
- *                         fotoProfil: { type: string, nullable: true, example: null }
  *       400:
  *         description: Email atau password kosong
  *         content:

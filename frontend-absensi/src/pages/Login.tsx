@@ -10,7 +10,6 @@ interface User {
   email: string;
   role: "KARYAWAN" | "HRD" | "ADMIN";
   officeId: number | null;
-  fotoProfil: string | null;
 }
 
 export default function Login() {
