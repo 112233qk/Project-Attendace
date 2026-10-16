@@ -52,12 +52,20 @@ export default function ListKaryawan() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Nilai filter yang benar-benar dipakai untuk request.
+  // Kalau user bukan ADMIN, paksa filter "HRD"/"ADMIN" jadi kosong.
+  const effectiveFilterRole =
+    currentUserRole === "ADMIN" ||
+    (filterRole !== "HRD" && filterRole !== "ADMIN")
+      ? filterRole
+      : "";
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
-      if (filterRole) params.append("role", filterRole);
+      if (effectiveFilterRole) params.append("role", effectiveFilterRole);
       params.append("page", String(page));
       params.append("limit", "10");
 
@@ -69,7 +77,7 @@ export default function ListKaryawan() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterRole, page]);
+  }, [search, effectiveFilterRole, page]);
 
   useEffect(() => {
     let isMounted = true;
@@ -79,7 +87,7 @@ export default function ListKaryawan() {
       try {
         const params = new URLSearchParams();
         if (search) params.append("search", search);
-        if (filterRole) params.append("role", filterRole);
+        if (effectiveFilterRole) params.append("role", effectiveFilterRole);
         params.append("page", String(page));
         params.append("limit", "10");
 
@@ -100,7 +108,7 @@ export default function ListKaryawan() {
     return () => {
       isMounted = false;
     };
-  }, [search, filterRole, page]);
+  }, [search, effectiveFilterRole, page]);
 
   const handleCreate = () => {
     setFormMode("create");
@@ -198,7 +206,7 @@ export default function ListKaryawan() {
           className="flex-1 px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none"
         />
         <select
-          value={filterRole}
+          value={effectiveFilterRole}
           onChange={(e) => {
             setFilterRole(e.target.value);
             setPage(1);
@@ -207,8 +215,12 @@ export default function ListKaryawan() {
         >
           <option value="">Semua Role</option>
           <option value="KARYAWAN">Karyawan</option>
-          <option value="HRD">HRD</option>
-          <option value="ADMIN">Admin</option>
+          {currentUserRole === "ADMIN" && (
+            <>
+              <option value="HRD">HRD</option>
+              <option value="ADMIN">Admin</option>
+            </>
+          )}
         </select>
       </div>
 
