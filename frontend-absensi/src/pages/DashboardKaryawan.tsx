@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import api from "../lib/api";
+import { compressImage } from "../lib/imageCompression";
 
 interface AttendanceStatus {
   hasCheckedIn: boolean;
@@ -123,11 +124,14 @@ export default function DashboardKaryawan() {
 
     setLoading(true);
     try {
+      const originalFile = fileInput.files[0];
+      const compressedFile = await compressImage(originalFile, 1);
+
       const formData = new FormData();
       formData.append("latitude", location.lat.toString());
       formData.append("longitude", location.lng.toString());
       formData.append("metodeMasuk", "GPS");
-      formData.append("fotoMasuk", fileInput.files[0]);
+      formData.append("fotoMasuk", compressedFile);
 
       await api.post("/attendances/check-in", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -164,10 +168,13 @@ export default function DashboardKaryawan() {
 
     setLoading(true);
     try {
+      const originalFile = fileInput.files[0];
+      const compressedFile = await compressImage(originalFile, 1);
+
       const formData = new FormData();
       formData.append("latitude", location.lat.toString());
       formData.append("longitude", location.lng.toString());
-      formData.append("fotoPulang", fileInput.files[0]);
+      formData.append("fotoPulang", compressedFile);
 
       await api.post("/attendances/check-out", formData, {
         headers: { "Content-Type": "multipart/form-data" },

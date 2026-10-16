@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import api from "../lib/api";
 import { useToast } from "../components/ui/ToastProvider";
+import { compressImage } from "../lib/imageCompression";
 
 type JenisIzin = "IZIN" | "SAKIT" | "CUTI";
 
@@ -56,7 +57,9 @@ export default function AjukanIzin() {
 
       const fileInput = fileRef.current;
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        formData.append("buktiFile", fileInput.files[0]);
+        const originalFile = fileInput.files[0];
+        const compressedFile = await compressImage(originalFile, 1);
+        formData.append("buktiFile", compressedFile);
       }
 
       await api.post("/permissions", formData, {
