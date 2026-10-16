@@ -7,8 +7,8 @@
 [![Express](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Tests](https://img.shields.io/badge/tests-129%20passed-success)](#-pengujian)
-[![Coverage](https://img.shields.io/badge/coverage-78.74%25-yellowgreen)](#-pengujian)
+[![Tests](https://img.shields.io/badge/tests-140%20passed-success)](#-pengujian)
+[![Coverage](https://img.shields.io/badge/coverage-76.39%25-yellowgreen)](#-pengujian)
 [![License](https://img.shields.io/badge/license-ISC-blue)](LICENSE)
 
 ---
@@ -91,7 +91,7 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
   - Admin: bisa kelola semua role
 - **Soft delete** (nonaktifkan user via `isActive=false`)
 - User nonaktif tidak bisa login (data historis tetap tersimpan)
-- Profil sendiri: update nama & ganti password
+- Profil sendiri: lihat profil (read-only) & ganti password
 
 ### 📊 Pelaporan
 
@@ -115,7 +115,7 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 
 - **Swagger UI** interaktif di `/api-docs`
 - OpenAPI 3.0 spec
-- 29 endpoint terdokumentasi dengan contoh request/response
+- 30 endpoint terdokumentasi dengan contoh request/response
 
 ---
 
@@ -198,14 +198,14 @@ erDiagram
         bool is_active
     }
     ATTENDANCES {
-    int id PK
-    int user_id FK
-    date tanggal
-    datetime jam_masuk
-    datetime jam_pulang
-    enum status_masuk
-    string keterangan
-}
+        int id PK
+        int user_id FK
+        date tanggal
+        datetime jam_masuk
+        datetime jam_pulang
+        enum status_masuk
+        string keterangan
+    }
     PERMISSIONS {
         int id PK
         int user_id FK
@@ -292,8 +292,6 @@ project-attendance/
 - **MySQL** 8.0 atau lebih baru
 - **Git**
 
-## ⚙️ Instalasi
-
 ### Langkah Instalasi
 
 **1. Clone repository:**
@@ -356,7 +354,7 @@ http://localhost:3000/api-docs
 
 **Fitur Swagger UI:**
 
-- 📖 Dokumentasi 29 endpoint
+- 📖 Dokumentasi 30 endpoint
 - 🔐 Tombol **Authorize** untuk input JWT
 - 🧪 Uji endpoint langsung dari browser
 - 📋 Skema request & response lengkap
@@ -374,9 +372,9 @@ Bisa diimpor ke **Postman** atau **Insomnia**.
 | Modul           | Jumlah Endpoint | Contoh                             |
 | --------------- | --------------- | ---------------------------------- |
 | **Auth**        | 3               | `POST /api/auth/login`             |
-| **Users**       | 8               | `GET /api/users/me`                |
+| **Users**       | 7               | `GET /api/users/me`                |
 | **Offices**     | 5               | `POST /api/offices`                |
-| **Attendances** | 4               | `POST /api/attendances/check-in`   |
+| **Attendances** | 5               | `POST /api/attendances/check-in`   |
 | **Permissions** | 7               | `PUT /api/permissions/:id/approve` |
 | **Reports**     | 3               | `GET /api/reports/attendance/pdf`  |
 | **Total**       | **30**          |                                    |
@@ -404,12 +402,11 @@ npm run test:coverage
 
 | Metrik                  | Hasil                      |
 | ----------------------- | -------------------------- |
-| **Test Suites**         | 6 passed / 6 total         |
-| **Test Cases**          | **129 passed / 129 total** |
-| **Statements Coverage** | 78.74%                     |
-| **Branches Coverage**   | 65.65%                     |
-| **Functions Coverage**  | 95.45%                     |
-| **Lines Coverage**      | 79.15%                     |
+| **Test Cases**          | **140 passed / 140 total** |
+| **Statements Coverage** | 76.39%                     |
+| **Branches Coverage**   | 63.35%                     |
+| **Functions Coverage**  | 91.54%                     |
+| **Lines Coverage**      | 76.37%                     |
 
 ### Setup Database Testing
 
@@ -484,22 +481,27 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 - [x] Modul Reports (PDF/Excel)
 - [x] Audit Log (AI-friendly JSON snapshot)
 - [x] Swagger Documentation
-- [x] Automated Testing (129 tests, 78% coverage)
+- [x] Automated Testing (140 tests, 76% coverage)
 - [x] Fix timezone (simpan UTC asli, tampil WIB)
 - [x] Kolom `keterangan` di tabel Attendances
 - [x] Blokir check-in saat izin APPROVED
 - [x] Auto check-out saat approve izin (emergency)
 - [x] Isi keterangan otomatis untuk hari izin
 - [x] Endpoint `/attendances/me`
+- [x] Rate limiting (global + auth) & Helmet security headers
 
-### 🚧 Dalam Pengembangan
+### 💡 Ide Pengembangan Lanjutan
 
-- [ ] Deployment guide (Nginx + HTTPS + PM2)
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Rate limiting & helmet (security hardening)
-- [ ] Docker support
-- [ ] Migrasi storage ke Cloudinary/S3/Railway Volume
-- [ ] Notifikasi izin via email/WhatsApp
+_(Aspirasi jangka panjang — di luar scope proyek ini)_
+
+- Face recognition biometrik untuk verifikasi presensi (butuh model ML & dataset)
+- Integrasi payroll otomatis dengan sistem HRIS eksternal
+- Multi-tenant architecture (melayani banyak perusahaan dalam satu instance)
+- Shift scheduling otomatis dengan algoritma penjadwalan
+- Perhitungan lembur & saldo cuti otomatis sesuai aturan ketenagakerjaan
+- Event-driven architecture dengan message broker (Kafka / RabbitMQ)
+- SSO / OAuth 2.0 dengan Google Workspace atau Microsoft 365
+- OCR surat dokter untuk validasi bukti sakit secara otomatis
 
 ---
 

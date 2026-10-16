@@ -138,9 +138,10 @@ npm run build
 
 **Profil**
 
-- [x] Lihat & update profil
-- [x] Ganti password
-- [x] Upload foto profil
+- [x] Lihat profil (read-only)
+- [x] Ganti password sendiri
+- [x] Avatar otomatis dari huruf pertama nama
+- [x] Info box: untuk ubah data profil, hubungi Admin
 
 **UI/UX**
 
@@ -165,14 +166,17 @@ npm run build
 - [x] Endpoint `/attendances/me` untuk riwayat milik sendiri
 - [x] HRD/Admin hanya lihat presensi sendiri di halaman ini
 
-### 🚧 Roadmap Berikutnya
+### 💡 Ide Pengembangan Lanjutan
 
-- [ ] Migrasi storage ke Cloudinary / S3 / Railway Volume (persist antar redeploy)
-- [ ] Notifikasi izin via email/WhatsApp
-- [ ] Dashboard statistik dengan grafik kehadiran
-- [ ] PWA / offline support
-- [ ] Unit testing frontend (Vitest + Testing Library)
-- [ ] CI/CD pipeline (GitHub Actions → Vercel)
+_(Aspirasi jangka panjang — di luar scope proyek ini)_
+
+- Aplikasi mobile native (React Native / Flutter)
+- Face recognition di sisi klien (TensorFlow.js / MediaPipe)
+- Dashboard analitik interaktif dengan visualisasi grafik lanjutan
+- Multi-bahasa (i18n) — Indonesia, Inggris, Mandarin
+- Progressive Web App offline-first dengan background sync
+- Web Push Notification untuk reminder check-in / check-out
+- Custom report builder drag-and-drop
 
 ## 📖 Aturan Bisnis Penting
 
@@ -183,6 +187,8 @@ npm run build
 - Timezone: disimpan UTC, ditampilkan WIB (UTC+7).
 - Kompresi foto di frontend: max 1 MB, resolusi max 1920×1080.
 - Endpoint `/attendances/me` untuk riwayat pribadi, `/attendances/history` untuk rekap semua (admin/HRD).
+- User tidak bisa update profil sendiri (nama, NIK, email, kantor).
+  Hanya bisa ganti password. Perubahan data profil harus lewat Admin.
 
 ## 🌐 URL Deployment
 
