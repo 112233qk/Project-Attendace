@@ -63,6 +63,10 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 - Auto-deteksi status: `TEPAT_WAKTU` / `TERLAMBAT` (timezone WIB)
 - Upload foto selfie/tempat (multipart/form-data, max 2MB)
 - Pencegahan duplikasi check-in/out per hari
+- **Blokir check-in otomatis jika user sedang dalam izin APPROVED**
+- **Auto check-out saat HRD approve izin di tanggal yang sama (skenario emergency)**
+- **Endpoint `/attendances/me` untuk riwayat milik sendiri (semua role)**
+- **Kolom `keterangan` untuk menandai hari izin / auto check-out**
 
 ### 📝 Pengajuan Izin/Cuti
 
@@ -137,7 +141,7 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 
 ## 🏗 Arsitektur Sistem
 
-Aplikasi menggunakan **Layered Architecture** untuk *separation of concerns*:
+Aplikasi menggunakan **Layered Architecture** untuk _separation of concerns_:
 
 ```mermaid
 flowchart TB
@@ -161,6 +165,7 @@ flowchart TB
     style Data fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
     style DB fill:#eceff1,stroke:#455a64,stroke-width:2px
 ```
+
 ## 🗄 Struktur Database
 
 Sistem mengelola **5 entitas utama**:
@@ -193,13 +198,14 @@ erDiagram
         bool is_active
     }
     ATTENDANCES {
-        int id PK
-        int user_id FK
-        date tanggal
-        datetime jam_masuk
-        datetime jam_pulang
-        enum status_masuk
-    }
+    int id PK
+    int user_id FK
+    date tanggal
+    datetime jam_masuk
+    datetime jam_pulang
+    enum status_masuk
+    string keterangan
+}
     PERMISSIONS {
         int id PK
         int user_id FK
@@ -220,6 +226,7 @@ erDiagram
 ```
 
 **Deskripsi singkat:**
+
 - **`offices`** — Data kantor: koordinat, radius, jam kerja.
 - **`users`** — Karyawan & staff (role: KARYAWAN/HRD/ADMIN).
 - **`attendances`** — Catatan absensi harian.
@@ -227,6 +234,7 @@ erDiagram
 - **`audit_logs`** — Audit trail semua aktivitas penting.
 
 > 📌 Skema lengkap: [`prisma/schema.prisma`](prisma/schema.prisma)
+
 ## 📂 Struktur Direktori
 
 <details>
@@ -368,10 +376,10 @@ Bisa diimpor ke **Postman** atau **Insomnia**.
 | **Auth**        | 3               | `POST /api/auth/login`             |
 | **Users**       | 8               | `GET /api/users/me`                |
 | **Offices**     | 5               | `POST /api/offices`                |
-| **Attendances** | 3               | `POST /api/attendances/check-in`   |
+| **Attendances** | 4               | `POST /api/attendances/check-in`   |
 | **Permissions** | 7               | `PUT /api/permissions/:id/approve` |
 | **Reports**     | 3               | `GET /api/reports/attendance/pdf`  |
-| **Total**       | **29**          |                                    |
+| **Total**       | **30**          |                                    |
 
 ---
 
@@ -477,6 +485,12 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 - [x] Audit Log (AI-friendly JSON snapshot)
 - [x] Swagger Documentation
 - [x] Automated Testing (129 tests, 78% coverage)
+- [x] Fix timezone (simpan UTC asli, tampil WIB)
+- [x] Kolom `keterangan` di tabel Attendances
+- [x] Blokir check-in saat izin APPROVED
+- [x] Auto check-out saat approve izin (emergency)
+- [x] Isi keterangan otomatis untuk hari izin
+- [x] Endpoint `/attendances/me`
 
 ### 🚧 Dalam Pengembangan
 
@@ -484,6 +498,8 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 - [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Rate limiting & helmet (security hardening)
 - [ ] Docker support
+- [ ] Migrasi storage ke Cloudinary/S3/Railway Volume
+- [ ] Notifikasi izin via email/WhatsApp
 
 ---
 
