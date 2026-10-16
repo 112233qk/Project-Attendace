@@ -3,6 +3,7 @@ import {
   checkIn,
   checkOut,
   getAttendanceHistory,
+  getMyAttendanceHistory,
   getTodayAttendance,
 } from "../controllers/attendanceController";
 import { authenticate, authorize } from "../middlewares/authMiddleware";
@@ -29,7 +30,17 @@ router.post(
   checkOut
 );
 
-// Endpoint Riwayat Absensi
+// Endpoint: Riwayat absensi milik sendiri (semua role)
+// Dipakai oleh halaman "Riwayat Presensi" di Dashboard
+// HARUS di atas route yang pakai parameter dinamis (kalau ada)
+router.get(
+  "/me",
+  authorize("KARYAWAN", "HRD", "ADMIN"),
+  getMyAttendanceHistory
+);
+
+// Endpoint: Riwayat absensi semua user (untuk rekap admin)
+// Karyawan hanya lihat milik sendiri, HRD/Admin bisa lihat semua
 router.get(
   "/history",
   authorize("KARYAWAN", "HRD", "ADMIN"),
@@ -38,11 +49,5 @@ router.get(
 
 // Endpoint: Cek status presensi hari ini (Karyawan)
 router.get("/today", authorize("KARYAWAN", "HRD"), getTodayAttendance);
-
-router.get(
-  "/history",
-  authorize("KARYAWAN", "HRD", "ADMIN"),
-  getAttendanceHistory
-);
 
 export default router;

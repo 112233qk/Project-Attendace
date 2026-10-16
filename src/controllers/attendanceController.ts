@@ -299,6 +299,43 @@ export const getAttendanceHistory = async (req: Request, res: Response) => {
   }
 };
 
+// 4b. RIWAYAT ABSENSI MILIK SENDIRI (semua role)
+// Selalu filter by current user — untuk halaman "Riwayat Presensi"
+// di Dashboard Karyawan (HRD/Admin pun hanya lihat milik sendiri di sini)
+export const getMyAttendanceHistory = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { tanggal } = req.query;
+
+    const whereClause: any = { userId };
+
+    if (tanggal && typeof tanggal === "string") {
+      whereClause.tanggal = new Date(tanggal);
+    }
+
+    const history = await prisma.attendance.findMany({
+      where: whereClause,
+      orderBy: { tanggal: "desc" },
+    });
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Riwayat absensi berhasil diambil.",
+      history
+    );
+  } catch (error: any) {
+    console.error("Get My History Error:", error);
+    return sendResponse(
+      res,
+      500,
+      false,
+      error.message || "Terjadi kesalahan pada server."
+    );
+  }
+};
+
 // 4. GET TODAY ATTENDANCE STATUS (untuk Karyawan cek status hari ini)
 export const getTodayAttendance = async (req: Request, res: Response) => {
   try {

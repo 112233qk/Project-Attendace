@@ -48,7 +48,7 @@ export default function RiwayatPresensi() {
 
     const fetchHistory = async () => {
       try {
-        const response = await api.get("/attendances/history");
+        const response = await api.get("/attendances/me");
         if (isMounted) {
           setHistory(response.data.data);
         }
