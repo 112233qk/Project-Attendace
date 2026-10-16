@@ -6,7 +6,6 @@ import {
   updateUser,
   deleteUser,
   getMyProfile,
-  updateMyProfile,
   changeMyPassword,
 } from "../controllers/userController";
 import { authenticate, authorize } from "../middlewares/authMiddleware";
@@ -21,7 +20,6 @@ router.use(authenticate);
 // PENTING: Ditaruh sebelum /:id agar tidak konflik
 // ============================================
 router.get("/me", getMyProfile);
-router.put("/me", updateMyProfile);
 router.put("/me/password", changeMyPassword);
 
 // ============================================

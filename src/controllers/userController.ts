@@ -166,7 +166,6 @@ export const getAllUsers = async (req: Request, res: Response) => {
           email: true,
           role: true,
           officeId: true,
-          fotoProfil: true,
           isActive: true,
           createdAt: true,
           updatedAt: true,
@@ -218,7 +217,6 @@ export const getUserById = async (req: Request, res: Response) => {
         email: true,
         role: true,
         officeId: true,
-        fotoProfil: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -258,7 +256,7 @@ export const getUserById = async (req: Request, res: Response) => {
 export const createUser = async (req: Request, res: Response) => {
   try {
     const { role: actorRole, id: actorId } = req.user!;
-    const { nik, nama, email, password, role, officeId, fotoProfil } = req.body;
+    const { nik, nama, email, password, role, officeId } = req.body;
 
     const validationError = validateUserInput(req.body, false);
     if (validationError) {
@@ -343,7 +341,6 @@ export const createUser = async (req: Request, res: Response) => {
         password: hashedPassword,
         role: assignedRole,
         officeId: parsedOfficeId,
-        fotoProfil: fotoProfil || null,
       },
       select: {
         id: true,
@@ -352,7 +349,6 @@ export const createUser = async (req: Request, res: Response) => {
         email: true,
         role: true,
         officeId: true,
-        fotoProfil: true,
         isActive: true,
         createdAt: true,
       },
@@ -413,8 +409,7 @@ export const updateUser = async (req: Request, res: Response) => {
       return sendResponse(res, 400, false, validationError);
     }
 
-    const { nik, nama, email, password, role, officeId, fotoProfil, isActive } =
-      req.body;
+    const { nik, nama, email, password, role, officeId, isActive } = req.body;
 
     const updateData: any = {};
 
@@ -464,8 +459,6 @@ export const updateUser = async (req: Request, res: Response) => {
       }
     }
 
-    if (fotoProfil !== undefined) updateData.fotoProfil = fotoProfil;
-
     if (isActive !== undefined) updateData.isActive = isActive;
 
     // Password: hanya Admin yang boleh ubah password user lain
@@ -502,7 +495,6 @@ export const updateUser = async (req: Request, res: Response) => {
         email: true,
         role: true,
         officeId: true,
-        fotoProfil: true,
         isActive: true,
         updatedAt: true,
       },
@@ -627,7 +619,6 @@ export const getMyProfile = async (req: Request, res: Response) => {
         email: true,
         role: true,
         officeId: true,
-        fotoProfil: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -651,10 +642,13 @@ export const getMyProfile = async (req: Request, res: Response) => {
   }
 };
 
+// DEPRECATED — endpoint PUT /api/users/me sudah dihapus per SRS v2
+// Pengubahan profil sendiri (nama, NIK, email, role, officeId) tidak diizinkan.
+// User hanya bisa: GET /me (read-only) dan PUT /me/password (ganti password).
 // ============================================
 // 7. UPDATE MY PROFILE (/me)
 // ============================================
-export const updateMyProfile = async (req: Request, res: Response) => {
+/*export const updateMyProfile = async (req: Request, res: Response) => {
   try {
     const { id } = req.user!;
     const { nama, fotoProfil } = req.body;
@@ -713,7 +707,7 @@ export const updateMyProfile = async (req: Request, res: Response) => {
       error.message || "Terjadi kesalahan pada server."
     );
   }
-};
+};*/
 
 // ============================================
 // 8. CHANGE MY PASSWORD (/me/password)
