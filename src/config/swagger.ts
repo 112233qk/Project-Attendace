@@ -82,7 +82,8 @@ const options: swaggerJsdoc.Options = {
       },
       {
         name: "Users",
-        description: "Manajemen User (CRUD, Profil Sendiri, Ganti Password)",
+        description:
+          "Manajemen User (CRUD, Lihat Profil Sendiri, Ganti Password)",
       },
       {
         name: "Offices",

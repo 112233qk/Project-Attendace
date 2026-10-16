@@ -163,32 +163,6 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *   put:
- *     tags:
- *       - Users
- *     summary: Update profil sendiri
- *     description: Update nama & foto profil sendiri (semua role). Tidak bisa update NIK, email, atau role.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nama: { type: string, example: 'Budi Updated' }
- *     responses:
- *       200:
- *         description: Profil berhasil diperbarui
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ApiResponse'
- *       400:
- *         description: Validasi gagal atau tidak ada data yang diupdate
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
