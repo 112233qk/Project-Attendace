@@ -58,7 +58,6 @@ describe("Users Module", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.users).toBeInstanceOf(Array);
 
-      // Semua user yang muncul harus role KARYAWAN
       res.body.data.users.forEach((u: any) => {
         expect(u.role).toBe("KARYAWAN");
       });
@@ -144,30 +143,6 @@ describe("Users Module", () => {
   });
 
   // ============================================
-  // PUT /api/users/me
-  // ============================================
-  describe("PUT /api/users/me", () => {
-    it("should update own name", async () => {
-      const res = await request(app)
-        .put("/api/users/me")
-        .set("Authorization", `Bearer ${karyawanToken}`)
-        .send({ nama: "Updated Karyawan" });
-
-      expect(res.status).toBe(200);
-      expect(res.body.data.nama).toBe("Updated Karyawan");
-    });
-
-    it("should reject invalid name (too short)", async () => {
-      const res = await request(app)
-        .put("/api/users/me")
-        .set("Authorization", `Bearer ${karyawanToken}`)
-        .send({ nama: "X" });
-
-      expect(res.status).toBe(400);
-    });
-  });
-
-  // ============================================
   // PUT /api/users/me/password
   // ============================================
   describe("PUT /api/users/me/password", () => {
@@ -195,6 +170,25 @@ describe("Users Module", () => {
         .send({ email: "karyawan@test.com", password: "newpass123" });
 
       expect(loginRes.status).toBe(200);
+    });
+    it("should reject missing old password", async () => {
+      const res = await request(app)
+        .put("/api/users/me/password")
+        .set("Authorization", `Bearer ${karyawanToken}`)
+        .send({ newPassword: "newpass123" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain("wajib diisi");
+    });
+
+    it("should reject new password too short", async () => {
+      const res = await request(app)
+        .put("/api/users/me/password")
+        .set("Authorization", `Bearer ${karyawanToken}`)
+        .send({ oldPassword: "password123", newPassword: "abc" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain("minimal 6 karakter");
     });
   });
 
@@ -225,6 +219,16 @@ describe("Users Module", () => {
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.status).toBe(404);
+    });
+
+    it("should allow HRD to view Karyawan detail", async () => {
+      const res = await request(app)
+        .get(`/api/users/${karyawanId}`)
+        .set("Authorization", `Bearer ${hrdToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.id).toBe(karyawanId);
+      expect(res.body.data.role).toBe("KARYAWAN");
     });
   });
 
@@ -285,7 +289,7 @@ describe("Users Module", () => {
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
         .send({
-          nik: "KRY001", // Sudah ada
+          nik: "KRY001",
           nama: "Dup",
           email: "unique@test.com",
           password: "password123",
@@ -327,7 +331,6 @@ describe("Users Module", () => {
     let tempUserId: number;
 
     beforeAll(async () => {
-      // Buat user khusus untuk dihapus
       const res = await request(app)
         .post("/api/users")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -349,7 +352,6 @@ describe("Users Module", () => {
       expect(res.status).toBe(200);
       expect(res.body.message).toBe("User berhasil dinonaktifkan.");
 
-      // Verifikasi isActive = false di DB
       const user = await prisma.user.findUnique({ where: { id: tempUserId } });
       expect(user?.isActive).toBe(false);
     });

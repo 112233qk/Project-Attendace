@@ -79,6 +79,8 @@ const globalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip rate limit saat test
+  skip: () => process.env.NODE_ENV === "test",
 });
 
 const authLimiter = rateLimit({
@@ -91,6 +93,8 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip rate limit saat test
+  skip: () => process.env.NODE_ENV === "test",
 });
 
 app.use("/api", globalLimiter);

@@ -10,6 +10,7 @@ describe("Attendances Module", () => {
   let adminToken: string;
   let karyawanId: number;
   let hrdId: number;
+  let adminId: number;
 
   const FIXTURE_PATH = path.join(__dirname, "fixtures", "sample.jpg");
   const OFFICE_LAT = -6.2088;
@@ -26,6 +27,7 @@ describe("Attendances Module", () => {
 
     karyawanId = karyawan.id;
     hrdId = hrd.id;
+    adminId = admin.id;
 
     adminToken = generateTestToken({
       id: admin.id,
@@ -48,7 +50,6 @@ describe("Attendances Module", () => {
   // POST /api/attendances/check-in
   // ============================================
   describe("POST /api/attendances/check-in", () => {
-    // ✅ Pindahkan beforeEach ke SINI (bukan di luar)
     beforeEach(async () => {
       await prisma.attendance.deleteMany();
     });
@@ -114,7 +115,6 @@ describe("Attendances Module", () => {
       expect(res.body.message).toContain("Latitude");
     });
 
-    // ✅ FIX: Jangan attach file, karena auth akan reject lebih dulu
     it("should reject access without token", async () => {
       const res = await request(app)
         .post("/api/attendances/check-in")
@@ -129,7 +129,6 @@ describe("Attendances Module", () => {
   // POST /api/attendances/check-out
   // ============================================
   describe("POST /api/attendances/check-out", () => {
-    // ✅ Pindahkan beforeEach ke SINI
     beforeEach(async () => {
       await prisma.attendance.deleteMany();
     });
@@ -196,12 +195,10 @@ describe("Attendances Module", () => {
   // GET /api/attendances/history
   // ============================================
   describe("GET /api/attendances/history", () => {
-    // ✅ Jangan ada beforeEach di sini — biarkan data yang di-seed tetap ada
     beforeAll(async () => {
-      // Bersihkan dulu
       await prisma.attendance.deleteMany();
 
-      // Buat data untuk karyawan
+      // Data milik karyawan
       await prisma.attendance.create({
         data: {
           userId: karyawanId,
@@ -213,7 +210,7 @@ describe("Attendances Module", () => {
         },
       });
 
-      // Buat data untuk HRD
+      // Data milik HRD
       await prisma.attendance.create({
         data: {
           userId: hrdId,
@@ -280,6 +277,166 @@ describe("Attendances Module", () => {
 
     it("should reject access without token", async () => {
       const res = await request(app).get("/api/attendances/history");
+      expect(res.status).toBe(401);
+    });
+  });
+
+  // ============================================
+  // GET /api/attendances/me
+  // ============================================
+  describe("GET /api/attendances/me", () => {
+    beforeAll(async () => {
+      await prisma.attendance.deleteMany();
+
+      // Data milik karyawan
+      await prisma.attendance.create({
+        data: {
+          userId: karyawanId,
+          tanggal: new Date("2026-02-01"),
+          jamMasuk: new Date("2026-02-01T08:00:00Z"),
+          statusMasuk: "TEPAT_WAKTU",
+          metodeMasuk: "GPS",
+        },
+      });
+
+      // Data milik HRD
+      await prisma.attendance.create({
+        data: {
+          userId: hrdId,
+          tanggal: new Date("2026-02-01"),
+          jamMasuk: new Date("2026-02-01T09:00:00Z"),
+          statusMasuk: "TERLAMBAT",
+          metodeMasuk: "GPS",
+        },
+      });
+
+      // Data milik Admin
+      await prisma.attendance.create({
+        data: {
+          userId: adminId,
+          tanggal: new Date("2026-02-01"),
+          jamMasuk: new Date("2026-02-01T07:30:00Z"),
+          statusMasuk: "TEPAT_WAKTU",
+          metodeMasuk: "GPS",
+        },
+      });
+    });
+
+    it("should return only own history for Karyawan", async () => {
+      const res = await request(app)
+        .get("/api/attendances/me")
+        .set("Authorization", `Bearer ${karyawanToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      res.body.data.forEach((a: any) => {
+        expect(a.userId).toBe(karyawanId);
+      });
+    });
+
+    it("should return only own history for HRD (not all users)", async () => {
+      const res = await request(app)
+        .get("/api/attendances/me")
+        .set("Authorization", `Bearer ${hrdToken}`);
+
+      expect(res.status).toBe(200);
+      res.body.data.forEach((a: any) => {
+        expect(a.userId).toBe(hrdId);
+      });
+      // Pastikan TIDAK ada data user lain
+      const userIds = res.body.data.map((a: any) => a.userId);
+      expect(userIds).not.toContain(karyawanId);
+      expect(userIds).not.toContain(adminId);
+    });
+
+    it("should return only own history for Admin", async () => {
+      const res = await request(app)
+        .get("/api/attendances/me")
+        .set("Authorization", `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      res.body.data.forEach((a: any) => {
+        expect(a.userId).toBe(adminId);
+      });
+      const userIds = res.body.data.map((a: any) => a.userId);
+      expect(userIds).not.toContain(karyawanId);
+      expect(userIds).not.toContain(hrdId);
+    });
+
+    it("should reject access without token", async () => {
+      const res = await request(app).get("/api/attendances/me");
+      expect(res.status).toBe(401);
+    });
+    it("should support filter by date", async () => {
+      const res = await request(app)
+        .get("/api/attendances/me?tanggal=2026-02-01")
+        .set("Authorization", `Bearer ${karyawanToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should return empty when filtering by date without data", async () => {
+      const res = await request(app)
+        .get("/api/attendances/me?tanggal=2099-12-31")
+        .set("Authorization", `Bearer ${karyawanToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual([]);
+    });
+  });
+
+  // ============================================
+  // GET /api/attendances/today
+  // ============================================
+  describe("GET /api/attendances/today", () => {
+    beforeEach(async () => {
+      await prisma.attendance.deleteMany();
+    });
+
+    it("should return empty status for Karyawan who hasn't checked in", async () => {
+      const res = await request(app)
+        .get("/api/attendances/today")
+        .set("Authorization", `Bearer ${karyawanToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.hasCheckedIn).toBe(false);
+      expect(res.body.data.hasCheckedOut).toBe(false);
+      expect(res.body.data.checkInTime).toBeNull();
+      expect(res.body.data.checkOutTime).toBeNull();
+      expect(res.body.data.attendance).toBeNull();
+    });
+
+    it("should return check-in time after check-in", async () => {
+      await request(app)
+        .post("/api/attendances/check-in")
+        .set("Authorization", `Bearer ${karyawanToken}`)
+        .field("latitude", OFFICE_LAT.toString())
+        .field("longitude", OFFICE_LNG.toString())
+        .attach("fotoMasuk", FIXTURE_PATH);
+
+      const res = await request(app)
+        .get("/api/attendances/today")
+        .set("Authorization", `Bearer ${karyawanToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.hasCheckedIn).toBe(true);
+      expect(res.body.data.hasCheckedOut).toBe(false);
+      expect(res.body.data.checkInTime).not.toBeNull();
+      expect(res.body.data.checkInTime).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    });
+
+    it("should allow HRD to access /today", async () => {
+      const res = await request(app)
+        .get("/api/attendances/today")
+        .set("Authorization", `Bearer ${hrdToken}`);
+
+      expect(res.status).toBe(200);
+    });
+
+    it("should reject without token", async () => {
+      const res = await request(app).get("/api/attendances/today");
       expect(res.status).toBe(401);
     });
   });
