@@ -240,48 +240,87 @@ erDiagram
 <details>
 <summary>Klik untuk melihat struktur folder lengkap</summary>
 
-```
+```text
 project-attendance/
+├── frontend-absensi/        # Frontend React (dokumentasi terpisah)
 ├── prisma/
-│   ├── migrations/          # Riwayat migrasi database
-│   └── schema.prisma        # Skema database
+│   ├── migrations/
+│   │   ├── 20260907130403_sync_with_erd/
+│   │   ├── 20260907130815_add_nik_unique/
+│   │   ├── 20260918095317_alpha/
+│   │   ├── 20260923001126_rename_roles_to_user_hrd_admin/
+│   │   ├── 20260923124654_add_audit_log_and_is_active/
+│   │   ├── 20260923125934/
+│   │   ├── 20260924130748_add_rejection_reason_to_permissions/
+│   │   ├── 20261013134116_add_keterangan_to_attendance/
+│   │   └── 20261016085700_remove_foto_profil_from_users/
+│   └── schema.prisma
 ├── public/
-│   └── uploads/             # File upload user
+│   └── uploads/
+│       └── permissions/
 ├── src/
 │   ├── config/
-│   │   ├── multer.ts        # Upload foto absensi
+│   │   ├── multer.ts
 │   │   ├── multerPermission.ts
 │   │   └── swagger.ts
 │   ├── controllers/
-│   │   ├── authController.ts
-│   │   ├── userController.ts
-│   │   ├── officeController.ts
 │   │   ├── attendanceController.ts
+│   │   ├── authController.ts
+│   │   ├── officeController.ts
 │   │   ├── permissionController.ts
-│   │   └── reportController.ts
-│   ├── docs/                # Anotasi Swagger
+│   │   ├── reportController.ts
+│   │   ├── seedController.ts
+│   │   └── userController.ts
+│   ├── docs/
+│   │   ├── attendances.docs.ts
+│   │   ├── auth.docs.ts
+│   │   ├── offices.docs.ts
+│   │   ├── permissions.docs.ts
+│   │   ├── reports.docs.ts
+│   │   └── users.docs.ts
 │   ├── middlewares/
 │   │   └── authMiddleware.ts
 │   ├── routes/
+│   │   ├── attendanceRoutes.ts
+│   │   ├── authRoutes.ts
+│   │   ├── officeRoutes.ts
+│   │   ├── permissionRoutes.ts
+│   │   ├── reportRoutes.ts
+│   │   ├── seedRoutes.ts
+│   │   └── userRoutes.ts
 │   ├── types/
 │   │   └── express/
 │   │       └── index.d.ts
 │   ├── utils/
-│   │   ├── haversine.ts
 │   │   ├── auditLogger.ts
-│   │   ├── pdfGenerator.ts
-│   │   └── excelGenerator.ts
-│   ├── app.ts               # Setup Express app
-│   └── server.ts            # Entry point
+│   │   ├── excelGenerator.ts
+│   │   ├── haversine.ts
+│   │   └── pdfGenerator.ts
+│   ├── app.ts
+│   └── server.ts
 ├── tests/
-│   ├── helpers/
 │   ├── fixtures/
-│   └── *.test.ts
-├── .env
-├── .env.test
+│   │   └── sample.jpg
+│   ├── helpers/
+│   │   ├── authHelper.ts
+│   │   └── dbHelper.ts
+│   ├── attendances.test.ts
+│   ├── auth.test.ts
+│   ├── offices.test.ts
+│   ├── permissions.test.ts
+│   ├── reports.test.ts
+│   ├── setup.ts
+│   └── users.test.ts
+├── INSTALLATION.md
+├── LICENSE
+├── package-lock.json
 ├── package.json
-└── README.md
+├── railway.json
+├── README.md
+└── tsconfig.json
 ```
+
+</details>
 
 </details>
 ## ⚙️ Instalasi

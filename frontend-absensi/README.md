@@ -16,21 +16,41 @@ Aplikasi web frontend untuk Sistem Absensi Karyawan berbasis React, TypeScript, 
 
 ```text
 frontend-absensi/
+├── public/
+│   ├── favicon.svg
+│   └── icons.svg
 ├── src/
-│   ├── assets/              # Aset statis (gambar, ikon)
+│   ├── assets/
+│   │   ├── hero.png
+│   │   ├── react.svg
+│   │   └── vite.svg
 │   ├── components/
-│   │   └── ui/              # Komponen UI reusable (Toast)
+│   │   ├── ui/
+│   │   │   ├── EmptyState.tsx
+│   │   │   ├── Spinner.tsx
+│   │   │   ├── Toast.tsx
+│   │   │   └── ToastProvider.tsx
+│   │   └── ProtectedRoute.tsx
 │   ├── lib/
-│   │   ├── api.ts           # Konfigurasi Axios + interceptor JWT
-│   │   └── imageCompression.ts  # Helper kompres foto
+│   │   ├── api.ts
+│   │   └── imageCompression.ts
 │   ├── pages/
 │   │   ├── admin/
-│   │   │   ├── components/  # Modal-modal admin
+│   │   │   ├── components/
+│   │   │   │   ├── ApproveConfirmModal.tsx
+│   │   │   │   ├── DeleteConfirmModal.tsx
+│   │   │   │   ├── FilePreviewModal.tsx
+│   │   │   │   ├── OfficeFormModal.tsx
+│   │   │   │   ├── PermissionDetailModal.tsx
+│   │   │   │   ├── RejectModal.tsx
+│   │   │   │   └── UserFormModal.tsx
 │   │   │   ├── ApprovalIzin.tsx
 │   │   │   ├── ExportLaporan.tsx
 │   │   │   ├── KelolaKantor.tsx
 │   │   │   ├── ListKaryawan.tsx
 │   │   │   └── RekapHariIni.tsx
+│   │   ├── components/
+│   │   │   └── ChangePasswordModal.tsx
 │   │   ├── AjukanIzin.tsx
 │   │   ├── DashboardAdmin.tsx
 │   │   ├── DashboardKaryawan.tsx
@@ -38,12 +58,21 @@ frontend-absensi/
 │   │   ├── Profil.tsx
 │   │   ├── RiwayatIzin.tsx
 │   │   └── RiwayatPresensi.tsx
-│   ├── App.tsx              # Routing utama aplikasi
-│   ├── main.tsx             # Entry point React
-│   └── index.css            # Tailwind CSS v4 + @theme dark mode
-├── .env.local               # Variable lingkungan lokal
-├── vite.config.ts           # Konfigurasi Vite & Tailwind Plugin
-└── README.md                # Dokumentasi proyek
+│   ├── vite-env.d.ts
+│   ├── App.css
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+├── package.json
+├── README.md
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vercel.json
+└── vite.config.ts
 ```
 
 ## 🔑 Kredensial Testing (Backend Railway)
