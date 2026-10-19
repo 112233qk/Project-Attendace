@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../../lib/api";
+import FilePreviewModal from "./components/FilePreviewModal";
+
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.replace("/api", "") ||
+  "https://project-attendace-production.up.railway.app";
 
 interface AttendanceRecord {
   id: number;
@@ -9,6 +14,8 @@ interface AttendanceRecord {
   jamPulang: string | null;
   statusMasuk: string | null;
   keterangan: string | null;
+  fotoMasuk: string | null;
+  fotoPulang: string | null;
   user?: {
     nama: string;
     nik: string;
@@ -35,6 +42,7 @@ const getTodayDate = (): string => {
 export default function RekapHariIni() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
 
   const fetchToday = useCallback(async () => {
     setLoading(true);
@@ -137,6 +145,7 @@ export default function RekapHariIni() {
                 <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
                   <th className="py-3 px-4">NIK</th>
                   <th className="py-3 px-4">Nama</th>
+                  <th className="py-3 px-4 whitespace-nowrap">Foto</th>
                   <th className="py-3 px-4">Check-in</th>
                   <th className="py-3 px-4">Check-out</th>
                   <th className="py-3 px-4 whitespace-nowrap">Status</th>
@@ -151,6 +160,35 @@ export default function RekapHariIni() {
                     </td>
                     <td className="py-3 px-4 font-medium text-ink">
                       {r.user?.nama || "-"}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        {r.fotoMasuk ? (
+                          <button
+                            onClick={() =>
+                              setPreviewFile(`${BASE_URL}${r.fotoMasuk}`)
+                            }
+                            className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded hover:bg-blue-500/30 cursor-pointer"
+                          >
+                            Masuk
+                          </button>
+                        ) : (
+                          <span className="text-xs text-muted">-</span>
+                        )}
+
+                        {r.fotoPulang ? (
+                          <button
+                            onClick={() =>
+                              setPreviewFile(`${BASE_URL}${r.fotoPulang}`)
+                            }
+                            className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded hover:bg-orange-500/30 cursor-pointer"
+                          >
+                            Pulang
+                          </button>
+                        ) : (
+                          <span className="text-xs text-muted">-</span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-green font-medium">
                       {formatTime(r.jamMasuk)}
@@ -179,6 +217,11 @@ export default function RekapHariIni() {
           </div>
         )}
       </div>
+      <FilePreviewModal
+        isOpen={!!previewFile}
+        fileUrl={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </div>
   );
 }

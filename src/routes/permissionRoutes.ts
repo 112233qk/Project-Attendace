@@ -23,7 +23,7 @@ router.use(authenticate);
 // Karyawan ajukan izin/cuti (upload bukti opsional, wajib untuk SAKIT)
 router.post(
   "/",
-  authorize("KARYAWAN"),
+  authorize("KARYAWAN", "HRD"),
   uploadPermission.single("buktiFile"),
   createPermission
 );
