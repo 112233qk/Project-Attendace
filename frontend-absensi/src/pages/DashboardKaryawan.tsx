@@ -9,6 +9,7 @@ interface AttendanceStatus {
   hasCheckedOut: boolean;
   checkInTime: string | null;
   checkOutTime: string | null;
+  activePermission: string | null;
 }
 
 interface User {
@@ -34,6 +35,7 @@ export default function DashboardKaryawan() {
     hasCheckedOut: false,
     checkInTime: null,
     checkOutTime: null,
+    activePermission: null,
   });
 
   // File input ref
@@ -322,34 +324,85 @@ export default function DashboardKaryawan() {
           </div>
 
           {/* Check-in */}
-          <div className="space-y-3 pt-2">
-            <label className="block text-sm font-medium text-ink-3">
-              1. Ambil Foto Check-in
-            </label>
-            <input
-              ref={checkInFileRef}
-              type="file"
-              accept="image/*"
-              capture="user"
-              disabled={status.hasCheckedIn || loading}
-              className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30 disabled:opacity-50"
-            />
-            <button
-              onClick={handleCheckIn}
-              disabled={status.hasCheckedIn || loading}
-              className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
-                status.hasCheckedIn
-                  ? "bg-ink-3/40 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-700 active:scale-98"
-              }`}
-            >
-              {loading
-                ? "Memproses..."
-                : status.hasCheckedIn
-                ? "Sudah Check-in"
-                : "Check-in Sekarang"}
-            </button>
-          </div>
+          {status.activePermission ? (
+            <div className="p-6 text-center space-y-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
+              <span className="text-3xl">⚠️</span>
+              <h3 className="text-lg font-bold text-yellow-300">
+                Anda Sedang Izin / Cuti
+              </h3>
+              <p className="text-sm text-yellow-200/80">
+                Berdasarkan data sistem, Anda sedang dalam masa{" "}
+                <strong>{status.activePermission}</strong> yang telah disetujui
+                hari ini. Anda tidak dapat melakukan Check-in atau Check-out.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Check-in */}
+              <div className="space-y-3 pt-2">
+                <label className="block text-sm font-medium text-ink-3">
+                  1. Ambil Foto Check-in
+                </label>
+                <input
+                  ref={checkInFileRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  disabled={status.hasCheckedIn || loading}
+                  className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30 disabled:opacity-50"
+                />
+                <button
+                  onClick={handleCheckIn}
+                  disabled={status.hasCheckedIn || loading}
+                  className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
+                    status.hasCheckedIn
+                      ? "bg-ink-3/40 cursor-not-allowed"
+                      : "bg-emerald-600 hover:bg-emerald-700 active:scale-98"
+                  }`}
+                >
+                  {loading
+                    ? "Memproses..."
+                    : status.hasCheckedIn
+                    ? "Sudah Check-in"
+                    : "Check-in Sekarang"}
+                </button>
+              </div>
+
+              {/* Check-out */}
+              <div className="space-y-3 pt-4 border-t border-line">
+                <label className="block text-sm font-medium text-ink-3">
+                  2. Ambil Foto Check-out
+                </label>
+                <input
+                  ref={checkOutFileRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  disabled={
+                    !status.hasCheckedIn || status.hasCheckedOut || loading
+                  }
+                  className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-500/20 file:text-orange-300 hover:file:bg-orange-500/30 disabled:opacity-50"
+                />
+                <button
+                  onClick={handleCheckOut}
+                  disabled={
+                    !status.hasCheckedIn || status.hasCheckedOut || loading
+                  }
+                  className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
+                    !status.hasCheckedIn || status.hasCheckedOut
+                      ? "bg-ink-3/40 cursor-not-allowed"
+                      : "bg-orange-600 hover:bg-orange-700 active:scale-98"
+                  }`}
+                >
+                  {loading
+                    ? "Memproses..."
+                    : status.hasCheckedOut
+                    ? "Sudah Check-out"
+                    : "Check-out Sekarang"}
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Check-out */}
           <div className="space-y-3 pt-4 border-t border-line">

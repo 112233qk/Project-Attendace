@@ -346,6 +346,21 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       where: { userId, tanggal: today },
     });
 
+    // Cek apakah user sedang izin APPROVED hari ini
+    const approvedPermission = await prisma.permission.findFirst({
+      where: {
+        userId,
+        status: "APPROVED",
+        tanggalMulai: { lte: today },
+        tanggalSelesai: { gte: today },
+      },
+      orderBy: { tanggalMulai: "desc" },
+    });
+
+    const activePermission = approvedPermission
+      ? approvedPermission.jenis
+      : null;
+
     // Format jam ke HH:mm:ss
     const formatTime = (date: Date | null | undefined): string | null => {
       if (!date) return null;
@@ -362,6 +377,7 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
         hasCheckedOut: false,
         checkInTime: null,
         checkOutTime: null,
+        activePermission,
         attendance: null,
       });
     }
@@ -371,6 +387,7 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       hasCheckedOut: !!attendance.jamPulang,
       checkInTime: formatTime(attendance.jamMasuk),
       checkOutTime: formatTime(attendance.jamPulang),
+      activePermission,
       attendance,
     });
   } catch (error: any) {
