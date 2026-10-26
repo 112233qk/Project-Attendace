@@ -109,8 +109,8 @@ export default function DashboardKaryawan() {
     };
   }, []);
 
-  // 5. Handle Check-in
-  const handleCheckIn = async () => {
+  // 5. Handle Check-in (Dipanggil otomatis setelah foto diambil)
+  const handleCheckIn = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!location) {
       alert(
         "Lokasi GPS belum terdeteksi. Izinkan akses lokasi pada browser Anda."
@@ -118,10 +118,9 @@ export default function DashboardKaryawan() {
       return;
     }
 
-    const fileInput = checkInFileRef.current;
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      alert("Foto wajib diambil untuk check-in.");
-      return;
+    const fileInput = e.target;
+    if (!fileInput.files || fileInput.files.length === 0) {
+      return; // User membatalkan pengambilan foto
     }
 
     setLoading(true);
@@ -140,7 +139,6 @@ export default function DashboardKaryawan() {
       });
 
       alert("Check-in Berhasil!");
-      fileInput.value = ""; // reset input
       fetchTodayStatus();
     } catch (err: unknown) {
       if (isAxiosError(err)) {
@@ -149,12 +147,13 @@ export default function DashboardKaryawan() {
         alert("Terjadi kesalahan yang tidak diketahui.");
       }
     } finally {
+      fileInput.value = ""; // Reset input agar bisa foto ulang
       setLoading(false);
     }
   };
 
-  // 6. Handle Check-out
-  const handleCheckOut = async () => {
+  // 6. Handle Check-out (Dipanggil otomatis setelah foto diambil)
+  const handleCheckOut = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!location) {
       alert(
         "Lokasi GPS belum terdeteksi. Izinkan akses lokasi pada browser Anda."
@@ -162,9 +161,8 @@ export default function DashboardKaryawan() {
       return;
     }
 
-    const fileInput = checkOutFileRef.current;
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      alert("Foto wajib diambil untuk check-out.");
+    const fileInput = e.target;
+    if (!fileInput.files || fileInput.files.length === 0) {
       return;
     }
 
@@ -183,7 +181,6 @@ export default function DashboardKaryawan() {
       });
 
       alert("Check-out Berhasil!");
-      fileInput.value = "";
       fetchTodayStatus();
     } catch (err: unknown) {
       if (isAxiosError(err)) {
@@ -192,6 +189,7 @@ export default function DashboardKaryawan() {
         alert("Terjadi kesalahan yang tidak diketahui.");
       }
     } finally {
+      fileInput.value = "";
       setLoading(false);
     }
   };
@@ -323,7 +321,7 @@ export default function DashboardKaryawan() {
             </div>
           </div>
 
-          {/* Check-in */}
+          {/* Tampilan jika sedang izin, atau form presensi */}
           {status.activePermission ? (
             <div className="p-6 text-center space-y-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
               <span className="text-3xl">⚠️</span>
@@ -337,102 +335,82 @@ export default function DashboardKaryawan() {
               </p>
             </div>
           ) : (
-            <>
-              {/* Check-in */}
-              <div className="space-y-3 pt-2">
+            <div className="space-y-6">
+              {/* Check-in Section */}
+              <div className="space-y-3">
                 <label className="block text-sm font-medium text-ink-3">
-                  1. Ambil Foto Check-in
+                  1. Presensi Masuk
                 </label>
+                {/* Input disembunyikan, dipicu oleh tombol di bawahnya */}
                 <input
                   ref={checkInFileRef}
                   type="file"
                   accept="image/*"
                   capture="user"
-                  disabled={status.hasCheckedIn || loading}
-                  className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30 disabled:opacity-50"
+                  className="hidden"
+                  onChange={handleCheckIn}
                 />
                 <button
-                  onClick={handleCheckIn}
-                  disabled={status.hasCheckedIn || loading}
+                  type="button"
+                  onClick={() => checkInFileRef.current?.click()}
+                  disabled={status.hasCheckedIn || loading || !location}
                   className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
-                    status.hasCheckedIn
+                    status.hasCheckedIn || !location
                       ? "bg-ink-3/40 cursor-not-allowed"
                       : "bg-emerald-600 hover:bg-emerald-700 active:scale-98"
                   }`}
                 >
                   {loading
-                    ? "Memproses..."
+                    ? "Memproses Foto..."
                     : status.hasCheckedIn
                     ? "Sudah Check-in"
-                    : "Check-in Sekarang"}
+                    : !location
+                    ? "Menunggu GPS..."
+                    : "📷 Check-in & Ambil Foto"}
                 </button>
               </div>
 
-              {/* Check-out */}
+              {/* Check-out Section */}
               <div className="space-y-3 pt-4 border-t border-line">
                 <label className="block text-sm font-medium text-ink-3">
-                  2. Ambil Foto Check-out
+                  2. Presensi Pulang
                 </label>
                 <input
                   ref={checkOutFileRef}
                   type="file"
                   accept="image/*"
                   capture="user"
-                  disabled={
-                    !status.hasCheckedIn || status.hasCheckedOut || loading
-                  }
-                  className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-500/20 file:text-orange-300 hover:file:bg-orange-500/30 disabled:opacity-50"
+                  className="hidden"
+                  onChange={handleCheckOut}
                 />
                 <button
-                  onClick={handleCheckOut}
+                  type="button"
+                  onClick={() => checkOutFileRef.current?.click()}
                   disabled={
-                    !status.hasCheckedIn || status.hasCheckedOut || loading
+                    !status.hasCheckedIn ||
+                    status.hasCheckedOut ||
+                    loading ||
+                    !location
                   }
                   className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
-                    !status.hasCheckedIn || status.hasCheckedOut
+                    !status.hasCheckedIn || status.hasCheckedOut || !location
                       ? "bg-ink-3/40 cursor-not-allowed"
                       : "bg-orange-600 hover:bg-orange-700 active:scale-98"
                   }`}
                 >
                   {loading
-                    ? "Memproses..."
+                    ? "Memproses Foto..."
                     : status.hasCheckedOut
                     ? "Sudah Check-out"
-                    : "Check-out Sekarang"}
+                    : !status.hasCheckedIn
+                    ? "Belum Check-in"
+                    : !location
+                    ? "Menunggu GPS..."
+                    : "📷 Check-out & Ambil Foto"}
                 </button>
               </div>
-            </>
+            </div>
           )}
-
-          {/* Check-out */}
-          <div className="space-y-3 pt-4 border-t border-line">
-            <label className="block text-sm font-medium text-ink-3">
-              2. Ambil Foto Check-out
-            </label>
-            <input
-              ref={checkOutFileRef}
-              type="file"
-              accept="image/*"
-              capture="user"
-              disabled={!status.hasCheckedIn || status.hasCheckedOut || loading}
-              className="block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-500/20 file:text-orange-300 hover:file:bg-orange-500/30 disabled:opacity-50"
-            />
-            <button
-              onClick={handleCheckOut}
-              disabled={!status.hasCheckedIn || status.hasCheckedOut || loading}
-              className={`w-full py-3 px-4 rounded-xl font-semibold text-white shadow-sm transition-all cursor-pointer ${
-                !status.hasCheckedIn || status.hasCheckedOut
-                  ? "bg-ink-3/40 cursor-not-allowed"
-                  : "bg-orange-600 hover:bg-orange-700 active:scale-98"
-              }`}
-            >
-              {loading
-                ? "Memproses..."
-                : status.hasCheckedOut
-                ? "Sudah Check-out"
-                : "Check-out Sekarang"}
-            </button>
-          </div>
         </div>
       </main>
     </div>
