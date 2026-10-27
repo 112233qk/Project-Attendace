@@ -41,11 +41,23 @@ const corsOptions: CorsOptions = {
   ) => {
     if (!origin) return callback(null, true);
 
+    // 1. Cek apakah origin ada di daftar allowedOrigins (dari env)
     if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
       return callback(null, true);
     }
 
-    if (origin.endsWith(".up.railway.app") || origin.includes("localhost")) {
+    // 2. Cek apakah origin adalah domain Vercel (preview atau production)
+    if (origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+
+    // 3. Cek apakah origin adalah domain Railway (jika masih dipakai)
+    if (origin.endsWith(".up.railway.app")) {
+      return callback(null, true);
+    }
+
+    // 4. Izinkan localhost untuk development
+    if (origin.includes("localhost")) {
       return callback(null, true);
     }
 
