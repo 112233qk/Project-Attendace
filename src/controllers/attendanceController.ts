@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { getDistanceInMeters } from "../utils/haversine";
-import { StatusMasuk } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -20,7 +19,6 @@ const sendResponse = (
 // Contoh: sekarang 12 Okt 2026 07:56 WIB → return 2026-10-12T00:00:00.000Z
 const getTodayDate = () => {
   const now = new Date();
-  // Geser ke WIB untuk membaca tanggal WIB
   const wibTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
   const year = wibTime.getUTCFullYear();
   const month = String(wibTime.getUTCMonth() + 1).padStart(2, "0");
@@ -34,7 +32,6 @@ export const checkIn = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const { latitude, longitude, metodeMasuk } = req.body;
 
-    // Validasi Input (Mencegah undefined)
     if (latitude === undefined || longitude === undefined) {
       return sendResponse(
         res,
@@ -56,7 +53,6 @@ export const checkIn = async (req: Request, res: Response) => {
       );
     }
 
-    // Ambil data user & office
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { office: true },
@@ -71,10 +67,8 @@ export const checkIn = async (req: Request, res: Response) => {
       );
     }
 
-    // Gunakan const office = user.office; agar TypeScript yakin tidak undefined
     const office = user.office;
 
-    // 1. Validasi Jarak (Haversine)
     const distance = getDistanceInMeters(
       latNum,
       lngNum,
@@ -93,9 +87,7 @@ export const checkIn = async (req: Request, res: Response) => {
       );
     }
 
-    // 2. Validasi Waktu (Keterlambatan) — berdasarkan WIB
     const nowUTC = new Date();
-    // Hitung waktu WIB untuk perbandingan
     const wibTime = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
     const currentTimeString =
       String(wibTime.getUTCHours()).padStart(2, "0") +
@@ -104,7 +96,6 @@ export const checkIn = async (req: Request, res: Response) => {
     const statusMasuk =
       currentTimeString > office.jamMasuk ? "TERLAMBAT" : "TEPAT_WAKTU";
 
-    // 3. Validasi Duplikasi Check-in
     const today = getTodayDate();
     const existingAttendance = await prisma.attendance.findFirst({
       where: { userId, tanggal: today },
@@ -119,7 +110,6 @@ export const checkIn = async (req: Request, res: Response) => {
       );
     }
 
-    // 4. Validasi: Blokir jika user sedang dalam izin/cuti APPROVED hari ini
     const approvedPermission = await prisma.permission.findFirst({
       where: {
         userId,
@@ -131,7 +121,7 @@ export const checkIn = async (req: Request, res: Response) => {
     });
 
     if (approvedPermission) {
-      const jenisLabel = approvedPermission.jenis; // IZIN / SAKIT / CUTI
+      const jenisLabel = approvedPermission.jenis;
       return sendResponse(
         res,
         400,
@@ -140,10 +130,8 @@ export const checkIn = async (req: Request, res: Response) => {
       );
     }
 
-    // 5. Simpan Foto
     const fotoMasuk = req.file ? `/uploads/${req.file.filename}` : null;
 
-    // 6. Simpan ke Database
     const attendance = await prisma.attendance.create({
       data: {
         userId,
@@ -173,7 +161,7 @@ export const checkIn = async (req: Request, res: Response) => {
 export const checkOut = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { latitude, longitude } = req.body;
+    const { latitude, longitude, alasanPulang } = req.body;
 
     if (latitude === undefined || longitude === undefined) {
       return sendResponse(
@@ -198,13 +186,8 @@ export const checkOut = async (req: Request, res: Response) => {
 
     const today = getTodayDate();
 
-    // Cari absensi hari ini yang belum check-out
     const attendance = await prisma.attendance.findFirst({
-      where: {
-        userId,
-        tanggal: today,
-        jamPulang: null,
-      },
+      where: { userId, tanggal: today, jamPulang: null },
     });
 
     if (!attendance) {
@@ -216,17 +199,60 @@ export const checkOut = async (req: Request, res: Response) => {
       );
     }
 
-    const fotoPulang = req.file ? `/uploads/${req.file.filename}` : null;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { office: true },
+    });
+
     const nowUTC = new Date();
+    let finalKeterangan = attendance.keterangan || "";
+
+    if (user?.office) {
+      const jamPulangKantor = user.office.jamPulang;
+      const wibTime = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
+      const currentMinutes =
+        wibTime.getUTCHours() * 60 + wibTime.getUTCMinutes();
+
+      const [h, m] = jamPulangKantor.split(":").map(Number);
+      const officeMinutes = (h ?? 0) * 60 + (m ?? 0);
+
+      const isTooEarly = currentMinutes < officeMinutes;
+      const isTooLate = currentMinutes > officeMinutes + 60;
+
+      if (isTooEarly || isTooLate) {
+        if (!alasanPulang || alasanPulang.trim() === "") {
+          return sendResponse(
+            res,
+            400,
+            false,
+            "Anda melakukan check-out di luar batas jam kerja. Wajib memberikan alasan."
+          );
+        }
+
+        const alasanText = `Check-out di luar jam kerja: ${alasanPulang.trim()}`;
+        finalKeterangan = finalKeterangan
+          ? `${finalKeterangan} | ${alasanText}`
+          : alasanText;
+      }
+    }
+
+    const fotoPulang = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // Fix Error 3: Gunakan objek dinamis agar TypeScript tidak protes soal 'undefined'
+    const updateData: any = {
+      jamPulang: nowUTC,
+      latPulang: latNum,
+      lngPulang: lngNum,
+      fotoPulang,
+    };
+
+    if (finalKeterangan !== "") {
+      updateData.keterangan = finalKeterangan;
+    }
 
     const updatedAttendance = await prisma.attendance.update({
       where: { id: attendance.id },
-      data: {
-        jamPulang: nowUTC,
-        latPulang: latNum,
-        lngPulang: lngNum,
-        fotoPulang,
-      },
+      data: updateData,
     });
 
     return sendResponse(
@@ -247,61 +273,7 @@ export const checkOut = async (req: Request, res: Response) => {
   }
 };
 
-// 3. ENDPOINT RIWAYAT ABSENSI
-export const getAttendanceHistory = async (req: Request, res: Response) => {
-  try {
-    const { id: currentUserId, role } = req.user!;
-    const { userId, tanggal } = req.query;
-
-    let whereClause: any = {};
-
-    // RBAC: Karyawan hanya bisa melihat milik sendiri
-    if (role === "KARYAWAN") {
-      whereClause.userId = currentUserId;
-    } else {
-      // HRD & ADMIN bisa melihat semua, atau filter berdasarkan userId
-      if (userId) {
-        whereClause.userId = parseInt(userId as string);
-      }
-    }
-
-    // Filter berdasarkan tanggal (opsional)
-    // Gunakan typeof untuk memastikan tanggal adalah string sebelum diubah ke Date
-    if (tanggal && typeof tanggal === "string") {
-      whereClause.tanggal = new Date(tanggal);
-    }
-
-    const history = await prisma.attendance.findMany({
-      where: whereClause,
-      include: {
-        user: {
-          select: { nama: true, nik: true, email: true },
-        },
-      },
-      orderBy: { tanggal: "desc" },
-    });
-
-    return sendResponse(
-      res,
-      200,
-      true,
-      "Riwayat absensi berhasil diambil.",
-      history
-    );
-  } catch (error: any) {
-    console.error("Get History Error:", error);
-    return sendResponse(
-      res,
-      500,
-      false,
-      error.message || "Terjadi kesalahan pada server."
-    );
-  }
-};
-
 // 4b. RIWAYAT ABSENSI MILIK SENDIRI (semua role)
-// Selalu filter by current user — untuk halaman "Riwayat Presensi"
-// di Dashboard Karyawan (HRD/Admin pun hanya lihat milik sendiri di sini)
 export const getMyAttendanceHistory = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -336,7 +308,7 @@ export const getMyAttendanceHistory = async (req: Request, res: Response) => {
   }
 };
 
-// 4. GET TODAY ATTENDANCE STATUS (untuk Karyawan cek status hari ini)
+// 4. GET TODAY ATTENDANCE STATUS
 export const getTodayAttendance = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -346,7 +318,12 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       where: { userId, tanggal: today },
     });
 
-    // Cek apakah user sedang izin APPROVED hari ini
+    // Fix Error 4: Tambahkan deklarasi 'user' agar 'jamPulangKantor' bisa dibaca
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { office: true },
+    });
+
     const approvedPermission = await prisma.permission.findFirst({
       where: {
         userId,
@@ -361,7 +338,6 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       ? approvedPermission.jenis
       : null;
 
-    // Format jam ke HH:mm:ss
     const formatTime = (date: Date | null | undefined): string | null => {
       if (!date) return null;
       const wib = new Date(date.getTime() + 7 * 60 * 60 * 1000);
@@ -378,6 +354,7 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
         checkInTime: null,
         checkOutTime: null,
         activePermission,
+        jamPulangKantor: user?.office?.jamPulang || "17:00",
         attendance: null,
       });
     }
@@ -388,6 +365,7 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       checkInTime: formatTime(attendance.jamMasuk),
       checkOutTime: formatTime(attendance.jamPulang),
       activePermission,
+      jamPulangKantor: user?.office?.jamPulang || "17:00",
       attendance,
     });
   } catch (error: any) {

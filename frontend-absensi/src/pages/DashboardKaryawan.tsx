@@ -10,6 +10,7 @@ interface AttendanceStatus {
   checkInTime: string | null;
   checkOutTime: string | null;
   activePermission: string | null;
+  jamPulangKantor: string | null;
 }
 
 interface User {
@@ -36,6 +37,7 @@ export default function DashboardKaryawan() {
     checkInTime: null,
     checkOutTime: null,
     activePermission: null,
+    jamPulangKantor: null,
   });
 
   // File input ref
@@ -152,7 +154,7 @@ export default function DashboardKaryawan() {
     }
   };
 
-  // 6. Handle Check-out (Dipanggil otomatis setelah foto diambil)
+  // 6. Handle Check-out
   const handleCheckOut = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!location) {
       alert(
@@ -162,8 +164,34 @@ export default function DashboardKaryawan() {
     }
 
     const fileInput = e.target;
-    if (!fileInput.files || fileInput.files.length === 0) {
-      return;
+    if (!fileInput.files || fileInput.files.length === 0) return;
+
+    let alasanPulang = "";
+
+    // LOGIKA VALIDASI JAM PULANG
+    if (status.jamPulangKantor) {
+      const now = new Date();
+      const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      const currentMinutes = wib.getUTCHours() * 60 + wib.getUTCMinutes();
+
+      const [h, m] = status.jamPulangKantor.split(":").map(Number);
+      const officeMinutes = (h ?? 0) * 60 + (m ?? 0);
+
+      const isTooEarly = currentMinutes < officeMinutes;
+      const isTooLate = currentMinutes > officeMinutes + 60;
+
+      if (isTooEarly || isTooLate) {
+        const input = window.prompt(
+          `Anda melakukan check-out di luar jam kerja (${status.jamPulangKantor}).\nMohon berikan alasan Anda:`
+        );
+
+        if (!input || input.trim() === "") {
+          alert("Check-out dibatalkan. Anda wajib memberikan alasan.");
+          fileInput.value = "";
+          return; // Hentikan proses
+        }
+        alasanPulang = input.trim();
+      }
     }
 
     setLoading(true);
@@ -175,6 +203,10 @@ export default function DashboardKaryawan() {
       formData.append("latitude", location.lat.toString());
       formData.append("longitude", location.lng.toString());
       formData.append("fotoPulang", compressedFile);
+
+      if (alasanPulang) {
+        formData.append("alasanPulang", alasanPulang);
+      }
 
       await api.post("/attendances/check-out", formData, {
         headers: { "Content-Type": "multipart/form-data" },
