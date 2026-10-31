@@ -15,6 +15,15 @@ const sendResponse = (
   return res.status(status).json({ success, message, data });
 };
 
+// Helper: Dapatkan jam saat ini dalam format "HH:mm" (WIB)
+const getCurrentWIBTimeString = () => {
+  const nowUTC = new Date();
+  const wibTime = new Date(nowUTC.getTime() + 7 * 60 * 60 * 1000);
+  const h = String(wibTime.getUTCHours()).padStart(2, "0");
+  const m = String(wibTime.getUTCMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+};
+
 // Helper: Dapatkan tanggal WIB hari ini sebagai UTC midnight
 // Contoh: sekarang 12 Okt 2026 07:56 WIB → return 2026-10-12T00:00:00.000Z
 const getTodayDate = () => {
@@ -368,12 +377,13 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       where: { userId, tanggal: today },
     });
 
-    // Fix Error 4: Tambahkan deklarasi 'user' agar 'jamPulangKantor' bisa dibaca
+    // Ambil data user untuk jamPulang kantor
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { office: true },
     });
 
+    // Cek apakah user sedang izin APPROVED hari ini
     const approvedPermission = await prisma.permission.findFirst({
       where: {
         userId,
@@ -384,8 +394,13 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       orderBy: { tanggalMulai: "desc" },
     });
 
+    // UBAH DI SINI: Kirim sebagai objek agar frontend tahu jamnya
     const activePermission = approvedPermission
-      ? approvedPermission.jenis
+      ? {
+          jenis: approvedPermission.jenis,
+          jamMulai: approvedPermission.jamMulai,
+          jamSelesai: approvedPermission.jamSelesai,
+        }
       : null;
 
     const formatTime = (date: Date | null | undefined): string | null => {
@@ -403,7 +418,7 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
         hasCheckedOut: false,
         checkInTime: null,
         checkOutTime: null,
-        activePermission,
+        activePermission, // Ini sekarang berisi objek atau null
         jamPulangKantor: user?.office?.jamPulang || "17:00",
         attendance: null,
       });
@@ -414,7 +429,7 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       hasCheckedOut: !!attendance.jamPulang,
       checkInTime: formatTime(attendance.jamMasuk),
       checkOutTime: formatTime(attendance.jamPulang),
-      activePermission,
+      activePermission, // Ini sekarang berisi objek atau null
       jamPulangKantor: user?.office?.jamPulang || "17:00",
       attendance,
     });
