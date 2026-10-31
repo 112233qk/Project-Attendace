@@ -94,10 +94,12 @@ model Permission {
   jenis           JenisIzin
   tanggalMulai    DateTime         @map("tanggal_mulai") @db.Date
   tanggalSelesai  DateTime         @map("tanggal_selesai") @db.Date
+  jamMulai       String?  @db.VarChar(5)
+  jamSelesai     String?  @db.VarChar(5)
   alasan          String           @db.Text
   buktiFile       String?          @map("bukti_file") @db.VarChar(255)
   status          StatusPermission @default(PENDING)
-  rejectionReason String?          @map("rejection_reason") @db.Text  // ← BARU
+  rejectionReason String?          @map("rejection_reason") @db.Text
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 

@@ -81,54 +81,59 @@ const hasApprovedOverlap = async (
 // ============================================
 export const createPermission = async (req: Request, res: Response) => {
   try {
-    const { id: userId } = req.user!;
-    const { jenis, tanggalMulai, tanggalSelesai, alasan } = req.body;
+    const userId = req.user!.id;
+    const {
+      jenis,
+      tanggalMulai,
+      tanggalSelesai,
+      alasan,
+      jamMulai,
+      jamSelesai,
+    } = req.body;
 
-    // Validasi input dasar
     if (!jenis || !tanggalMulai || !tanggalSelesai || !alasan) {
       return sendResponse(
         res,
         400,
         false,
-        "Jenis, tanggal mulai, tanggal selesai, dan alasan wajib diisi."
+        "Jenis, tanggal, dan alasan wajib diisi."
       );
     }
 
-    // Validasi jenis
-    if (!["IZIN", "SAKIT", "CUTI"].includes(jenis)) {
+    // 1. Validasi Format Jam (Jika diisi)
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (jamMulai && !timeRegex.test(jamMulai)) {
       return sendResponse(
         res,
         400,
         false,
-        "Jenis izin tidak valid. Pilih IZIN, SAKIT, atau CUTI."
+        "Format Jam Mulai tidak valid (HH:mm)."
       );
     }
-
-    // Validasi format tanggal
-    if (!isValidDate(tanggalMulai) || !isValidDate(tanggalSelesai)) {
+    if (jamSelesai && !timeRegex.test(jamSelesai)) {
       return sendResponse(
         res,
         400,
         false,
-        "Format tanggal tidak valid. Gunakan YYYY-MM-DD."
+        "Format Jam Selesai tidak valid (HH:mm)."
       );
     }
-
-    const startDate = normalizeDate(tanggalMulai);
-    const endDate = normalizeDate(tanggalSelesai);
-
-    // Validasi tanggal mulai <= tanggal selesai
-    if (startDate > endDate) {
+    if (jamMulai && jamSelesai && jamMulai >= jamSelesai) {
       return sendResponse(
         res,
         400,
         false,
-        "Tanggal mulai harus lebih awal atau sama dengan tanggal selesai."
+        "Jam mulai harus lebih awal dari jam selesai."
       );
     }
 
-    // Validasi tanggal tidak boleh masa lalu
-    if (isPastDate(startDate)) {
+    const start = new Date(tanggalMulai);
+    const end = new Date(tanggalSelesai);
+
+    // 2. Validasi Tanggal Masa Lalu
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (start < today) {
       return sendResponse(
         res,
         400,
@@ -137,81 +142,93 @@ export const createPermission = async (req: Request, res: Response) => {
       );
     }
 
-    // Validasi alasan panjang
-    if (typeof alasan !== "string" || alasan.trim().length < 5) {
-      return sendResponse(res, 400, false, "Alasan minimal 5 karakter.");
+    // 3. Validasi Bukti untuk SAKIT
+    if (jenis === "SAKIT" && !req.file) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Pengajuan SAKIT wajib melampirkan bukti."
+      );
     }
-
-    // Validasi bukti untuk SAKIT
     const buktiFile = req.file
       ? `/uploads/permissions/${req.file.filename}`
       : null;
-    if (jenis === "SAKIT" && !buktiFile) {
+
+    // 4. Cek Overlap (Bentrok Jadwal)
+    const existingPermissions = await prisma.permission.findMany({
+      where: {
+        userId,
+        status: { in: ["PENDING", "APPROVED"] },
+        OR: [{ tanggalMulai: { lte: end }, tanggalSelesai: { gte: start } }],
+      },
+    });
+
+    // Logika Overlap Waktu (Jika ada yang tanggalnya sama, cek jamnya)
+    const hasOverlap = existingPermissions.some((p) => {
+      // Jika tanggal persis sama dan keduanya punya jam
+      if (
+        p.tanggalMulai.getTime() === start.getTime() &&
+        p.tanggalSelesai.getTime() === end.getTime() &&
+        p.jamMulai &&
+        p.jamSelesai &&
+        jamMulai &&
+        jamSelesai
+      ) {
+        // Cek irisan jam: (StartA < EndB) && (EndA > StartB)
+        return jamMulai < p.jamSelesai && jamSelesai > p.jamMulai;
+      }
+      // Jika salah satunya seharian penuh (null), berarti bentrok
+      if (!p.jamMulai || !jamMulai) return true;
+
+      return true;
+    });
+
+    if (hasOverlap) {
       return sendResponse(
         res,
         400,
         false,
-        "Pengajuan SAKIT wajib melampirkan bukti (surat dokter)."
+        "Anda sudah memiliki pengajuan izin di waktu tersebut."
       );
     }
 
-    // Cek overlap dengan pengajuan APPROVED
-    const overlap = await hasApprovedOverlap(userId, startDate, endDate);
-    if (overlap) {
-      return sendResponse(
-        res,
-        400,
-        false,
-        "Anda sudah memiliki pengajuan yang disetujui pada rentang tanggal tersebut."
-      );
-    }
-
+    // 5. Simpan ke Database
     const permission = await prisma.permission.create({
       data: {
         userId,
-        jenis: jenis as JenisIzin,
-        tanggalMulai: startDate,
-        tanggalSelesai: endDate,
+        jenis,
+        tanggalMulai: start,
+        tanggalSelesai: end,
+        jamMulai: jamMulai || null,
+        jamSelesai: jamSelesai || null,
         alasan: alasan.trim(),
         buktiFile,
         status: "PENDING",
       },
-      include: {
-        user: { select: { id: true, nama: true, nik: true, email: true } },
-      },
     });
 
-    // Audit log
     await logActivity({
       req,
       action: "CREATE_PERMISSION",
       entity: "permissions",
       entityId: permission.id,
-      newValue: {
-        id: permission.id,
-        jenis: permission.jenis,
-        tanggalMulai: permission.tanggalMulai,
-        tanggalSelesai: permission.tanggalSelesai,
-        status: permission.status,
-      },
-      description: `User ${userId} mengajukan ${jenis} dari ${tanggalMulai} sampai ${tanggalSelesai}.`,
+      newValue: permission,
+      description: `User ${userId} mengajukan ${jenis} ${
+        jamMulai ? `(${jamMulai}-${jamSelesai})` : ""
+      }.`,
     });
 
     return sendResponse(
       res,
       201,
       true,
-      "Pengajuan berhasil dibuat.",
+      "Pengajuan berhasil dikirim.",
       permission
     );
   } catch (error: any) {
     console.error("Create Permission Error:", error);
-    return sendResponse(
-      res,
-      500,
-      false,
-      error.message || "Terjadi kesalahan pada server."
-    );
+    return sendResponse(res, 500, false, error.message || "Terjadi kesalahan.");
   }
 };
 
@@ -596,61 +613,47 @@ export const cancelPermission = async (req: Request, res: Response) => {
 // ============================================
 export const approvePermission = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const permissionId = parseInt(id as string);
-    const { id: actorId } = req.user!;
-
-    if (isNaN(permissionId)) {
-      return sendResponse(res, 400, false, "ID pengajuan tidak valid.");
-    }
+    const permissionId = parseInt(req.params.id as string);
+    const actorId = req.user!.id;
+    const actorRole = req.user!.role;
 
     const permission = await prisma.permission.findUnique({
       where: { id: permissionId },
+      include: { user: true },
     });
-    if (!permission) {
-      return sendResponse(res, 404, false, "Pengajuan tidak ditemukan.");
-    }
 
-    // ⭐ Cegah self-approval
-    if (permission.userId === actorId) {
+    if (!permission)
+      return sendResponse(res, 404, false, "Pengajuan tidak ditemukan.");
+    if (permission.status !== "PENDING")
+      return sendResponse(res, 400, false, "Pengajuan sudah diproses.");
+    if (permission.userId === actorId && actorRole === "HRD") {
       return sendResponse(
         res,
         403,
         false,
-        "Anda tidak dapat menyetujui pengajuan Anda sendiri. Minta HRD lain atau Admin untuk menyetujui."
+        "HRD tidak dapat menyetujui pengajuannya sendiri."
       );
     }
 
-    if (permission.status !== "PENDING") {
-      return sendResponse(
-        res,
-        400,
-        false,
-        `Pengajuan sudah diproses sebelumnya (status: ${permission.status}).`
-      );
-    }
-
-    const updated = await prisma.permission.update({
+    // Update status ke APPROVED
+    const updatedPermission = await prisma.permission.update({
       where: { id: permissionId },
-      data: {
-        status: "APPROVED",
-        approvedBy: actorId,
-      },
-      include: {
-        user: { select: { id: true, nama: true, nik: true } },
-        approver: { select: { id: true, nama: true, role: true } },
-      },
+      data: { status: "APPROVED", approvedBy: actorId },
     });
 
-    // ============================================
-    // AUTO CHECK-OUT (Emergency Scenario)
-    // ============================================
-    // Cek apakah hari ini user check-in tapi belum check-out
-    const today = getTodayDate();
-    const isTodayWithinPermission =
-      permission.tanggalMulai <= today && permission.tanggalSelesai >= today;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(permission.tanggalMulai);
+    const end = new Date(permission.tanggalSelesai);
 
-    if (isTodayWithinPermission) {
+    // Tentukan Label Keterangan (IZIN atau IZIN (10:00 - 12:00))
+    const labelKeterangan =
+      permission.jamMulai && permission.jamSelesai
+        ? `${permission.jenis} (${permission.jamMulai} - ${permission.jamSelesai})`
+        : permission.jenis;
+
+    // Cek Auto Check-out (HANYA JIKA SEHARIAN PENUH / JAM NULL)
+    if (!permission.jamMulai && start <= today && end >= today) {
       const todayAttendance = await prisma.attendance.findFirst({
         where: {
           userId: permission.userId,
@@ -661,77 +664,43 @@ export const approvePermission = async (req: Request, res: Response) => {
       });
 
       if (todayAttendance) {
-        const approvalTime = new Date();
-
         await prisma.attendance.update({
           where: { id: todayAttendance.id },
           data: {
-            jamPulang: approvalTime,
+            jamPulang: new Date(),
             keterangan: `${permission.jenis} disetujui, auto check-out`,
           },
-        });
-
-        await logActivity({
-          req,
-          action: "UPDATE_ATTENDANCE",
-          entity: "attendances",
-          entityId: todayAttendance.id,
-          newValue: {
-            jamPulang: approvalTime,
-            keterangan: `${permission.jenis} disetujui, auto check-out`,
-          },
-          description: `Auto check-out user ${permission.userId} karena ${permission.jenis} disetujui.`,
         });
       }
     }
 
-    // ============================================
-    // ISI KETERANGAN UNTUK SEMUA TANGGAL IZIN
-    // ============================================
-    // Loop setiap tanggal dalam rentang izin, isi keterangan di attendance
-    const jenisLabel = permission.jenis; // CUTI / SAKIT / IZIN
-    const startDate = new Date(permission.tanggalMulai);
-    const endDate = new Date(permission.tanggalSelesai);
-    const currentDate = new Date(startDate);
-
-    // Loop dari tanggalMulai sampai tanggalSelesai (inklusif)
-    while (currentDate <= endDate) {
-      // Clone tanggal supaya tidak termutasi di loop
+    // Loop tanggal untuk mengisi Keterangan di Rekap
+    const currentDate = new Date(start);
+    while (currentDate <= end) {
       const checkDate = new Date(currentDate);
-
-      // Cari attendance existing untuk user & tanggal ini
       const existingAttendance = await prisma.attendance.findFirst({
-        where: {
-          userId: permission.userId,
-          tanggal: checkDate,
-        },
+        where: { userId: permission.userId, tanggal: checkDate },
       });
 
       if (existingAttendance) {
-        // Update keterangan (jangan timpa auto check-out B3b)
-        // Hanya update kalau keterangan masih kosong atau bukan "auto check-out"
         if (
           !existingAttendance.keterangan ||
           !existingAttendance.keterangan.includes("auto check-out")
         ) {
           await prisma.attendance.update({
             where: { id: existingAttendance.id },
-            data: { keterangan: jenisLabel },
+            data: { keterangan: labelKeterangan },
           });
         }
       } else {
-        // Buat record attendance baru sebagai penanda hari izin
         await prisma.attendance.create({
           data: {
             userId: permission.userId,
             tanggal: checkDate,
-            keterangan: jenisLabel,
-            // jamMasuk, jamPulang, statusMasuk, metodeMasuk biarkan null
+            keterangan: labelKeterangan,
           },
         });
       }
-
-      // Increment 1 hari
       currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
@@ -740,26 +709,19 @@ export const approvePermission = async (req: Request, res: Response) => {
       action: "APPROVE_PERMISSION",
       entity: "permissions",
       entityId: permissionId,
-      newValue: { status: "APPROVED", approvedBy: actorId },
-      description: `User ${actorId} menyetujui pengajuan ${permission.jenis} dari user ${permission.userId}.`,
+      description: `Menyetujui ${permission.jenis} untuk user ${permission.userId}.`,
     });
-    ``;
 
     return sendResponse(
       res,
       200,
       true,
       "Pengajuan berhasil disetujui.",
-      updated
+      updatedPermission
     );
   } catch (error: any) {
-    console.error("Approve Permission Error:", error);
-    return sendResponse(
-      res,
-      500,
-      false,
-      error.message || "Terjadi kesalahan pada server."
-    );
+    console.error("Approve Error:", error);
+    return sendResponse(res, 500, false, error.message || "Terjadi kesalahan.");
   }
 };
 
