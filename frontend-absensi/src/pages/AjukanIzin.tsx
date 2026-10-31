@@ -11,6 +11,12 @@ export default function AjukanIzin() {
   const toast = useToast();
   const navigate = useNavigate();
   const [jenis, setJenis] = useState<JenisIzin>("IZIN");
+
+  // STATE BARU UNTUK IZIN PER JAM
+  const [isHourly, setIsHourly] = useState(false);
+  const [jamMulai, setJamMulai] = useState("");
+  const [jamSelesai, setJamSelesai] = useState("");
+
   const [tanggalMulai, setTanggalMulai] = useState("");
   const [tanggalSelesai, setTanggalSelesai] = useState("");
   const [alasan, setAlasan] = useState("");
@@ -35,6 +41,23 @@ export default function AjukanIzin() {
       );
       return;
     }
+
+    // VALIDASI IZIN PER JAM
+    if (isHourly) {
+      if (tanggalMulai !== tanggalSelesai) {
+        setError("Izin per jam hanya dapat diajukan untuk 1 hari yang sama.");
+        return;
+      }
+      if (!jamMulai || !jamSelesai) {
+        setError("Jam mulai dan jam selesai wajib diisi untuk izin per jam.");
+        return;
+      }
+      if (jamMulai >= jamSelesai) {
+        setError("Jam mulai harus lebih awal dari jam selesai.");
+        return;
+      }
+    }
+
     if (alasan.trim().length < 5) {
       setError("Alasan minimal 5 karakter.");
       return;
@@ -55,6 +78,12 @@ export default function AjukanIzin() {
       formData.append("tanggalSelesai", tanggalSelesai);
       formData.append("alasan", alasan.trim());
 
+      // KIRIM JAM JIKA MEMILIH PER JAM
+      if (isHourly) {
+        formData.append("jamMulai", jamMulai);
+        formData.append("jamSelesai", jamSelesai);
+      }
+
       const fileInput = fileRef.current;
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
         const originalFile = fileInput.files[0];
@@ -68,8 +97,12 @@ export default function AjukanIzin() {
 
       toast.success("Pengajuan Terkirim", "Menunggu persetujuan HRD/Admin.");
       setSuccess(true);
+
       // Reset form
       setJenis("IZIN");
+      setIsHourly(false);
+      setJamMulai("");
+      setJamSelesai("");
       setTanggalMulai("");
       setTanggalSelesai("");
       setAlasan("");
@@ -165,6 +198,37 @@ export default function AjukanIzin() {
               </div>
             </div>
 
+            {/* Durasi Izin (Baru) */}
+            <div>
+              <label className="block text-sm font-semibold text-ink-3 mb-2">
+                Durasi Pengajuan *
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsHourly(false)}
+                  className={`py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer border-2 ${
+                    !isHourly
+                      ? "bg-blue text-white border-blue shadow-lg shadow-blue/20"
+                      : "bg-surface-soft text-ink-3 border-line hover:border-blue/30"
+                  }`}
+                >
+                  Seharian Penuh
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsHourly(true)}
+                  className={`py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer border-2 ${
+                    isHourly
+                      ? "bg-blue text-white border-blue shadow-lg shadow-blue/20"
+                      : "bg-surface-soft text-ink-3 border-line hover:border-blue/30"
+                  }`}
+                >
+                  Beberapa Jam
+                </button>
+              </div>
+            </div>
+
             {/* Tanggal */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -190,10 +254,41 @@ export default function AjukanIzin() {
                   min={tanggalMulai || today}
                   value={tanggalSelesai}
                   onChange={(e) => setTanggalSelesai(e.target.value)}
-                  className="w-full px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none"
+                  disabled={isHourly} // Kunci tanggal selesai jika per jam
+                  className="w-full px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none disabled:opacity-50"
                 />
               </div>
             </div>
+
+            {/* Jam (Hanya muncul jika memilih Beberapa Jam) */}
+            {isHourly && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-surface-blue border border-line rounded-xl">
+                <div>
+                  <label className="block text-sm font-semibold text-blue-2 mb-2">
+                    Jam Mulai *
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={jamMulai}
+                    onChange={(e) => setJamMulai(e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-blue-2 mb-2">
+                    Jam Selesai *
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={jamSelesai}
+                    onChange={(e) => setJamSelesai(e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Alasan */}
             <div>
