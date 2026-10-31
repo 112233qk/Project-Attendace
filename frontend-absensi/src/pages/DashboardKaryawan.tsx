@@ -5,12 +5,18 @@ import api from "../lib/api";
 import { compressImage } from "../lib/imageCompression";
 import CheckoutReasonModal from "../components/CheckoutReasonModal";
 
+interface ActivePermission {
+  jenis: string;
+  jamMulai: string | null;
+  jamSelesai: string | null;
+}
+
 interface AttendanceStatus {
   hasCheckedIn: boolean;
   hasCheckedOut: boolean;
   checkInTime: string | null;
   checkOutTime: string | null;
-  activePermission: string | null;
+  activePermission: ActivePermission | null;
   jamPulangKantor: string | null;
 }
 
@@ -44,7 +50,6 @@ export default function DashboardKaryawan() {
     jamPulangKantor: null,
   });
 
-  // File input ref
   const checkInFileRef = useRef<HTMLInputElement>(null);
   const checkOutFileRef = useRef<HTMLInputElement>(null);
 
@@ -58,13 +63,13 @@ export default function DashboardKaryawan() {
     }
   });
 
-  // 2. Update Jam Real-time
+  // 1. Update Jam Real-time
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // 3. Ambil Lokasi GPS User
+  // 2. Ambil Lokasi GPS User
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -85,7 +90,7 @@ export default function DashboardKaryawan() {
     }
   }, []);
 
-  // 4. Fetch Status Presensi Hari Ini
+  // 3. Fetch Status Presensi Hari Ini
   const fetchTodayStatus = useCallback(async () => {
     try {
       const response = await api.get("/attendances/today");
@@ -95,10 +100,8 @@ export default function DashboardKaryawan() {
     }
   }, []);
 
-  // Initial load: inline async (tidak trigger ESLint rule)
   useEffect(() => {
     let isMounted = true;
-
     const load = async () => {
       try {
         const response = await api.get("/attendances/today");
@@ -107,15 +110,41 @@ export default function DashboardKaryawan() {
         console.error("Gagal mengambil status presensi:", err);
       }
     };
-
     load();
-
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // 5. Handle Check-in (Dipanggil otomatis setelah foto diambil)
+  // HELPER: Cek apakah saat ini user sedang dalam masa izin per jam
+  const checkIsCurrentlyOnLeave = (): boolean => {
+    if (!status.activePermission) return false;
+
+    // Jika izin seharian penuh (tidak ada data jam)
+    if (
+      !status.activePermission.jamMulai ||
+      !status.activePermission.jamSelesai
+    ) {
+      return true;
+    }
+
+    // Jika izin per jam, cek jam sekarang (WIB)
+    const now = new Date();
+    const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const currentHourMin =
+      String(wib.getUTCHours()).padStart(2, "0") +
+      ":" +
+      String(wib.getUTCMinutes()).padStart(2, "0");
+
+    return (
+      currentHourMin >= status.activePermission.jamMulai &&
+      currentHourMin <= status.activePermission.jamSelesai
+    );
+  };
+
+  const isOnLeave = checkIsCurrentlyOnLeave();
+
+  // 4. Handle Check-in
   const handleCheckIn = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!location) {
       alert(
@@ -125,9 +154,7 @@ export default function DashboardKaryawan() {
     }
 
     const fileInput = e.target;
-    if (!fileInput.files || fileInput.files.length === 0) {
-      return; // User membatalkan pengambilan foto
-    }
+    if (!fileInput.files || fileInput.files.length === 0) return;
 
     setLoading(true);
     try {
@@ -153,12 +180,12 @@ export default function DashboardKaryawan() {
         alert("Terjadi kesalahan yang tidak diketahui.");
       }
     } finally {
-      fileInput.value = ""; // Reset input agar bisa foto ulang
+      fileInput.value = "";
       setLoading(false);
     }
   };
 
-  // 6a. Fungsi Eksekusi Check-out (Dipanggil dari normal flow atau Modal)
+  // 5a. Fungsi Eksekusi Check-out
   const executeCheckOut = async (file: File, alasanPulang: string) => {
     setLoading(true);
     try {
@@ -192,7 +219,7 @@ export default function DashboardKaryawan() {
     }
   };
 
-  // 6b. Handle Check-out (Validasi sebelum eksekusi)
+  // 5b. Handle Check-out
   const handleCheckOut = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!location) {
       alert("Lokasi GPS belum terdeteksi.");
@@ -204,7 +231,6 @@ export default function DashboardKaryawan() {
 
     const file = fileInput.files[0];
 
-    // LOGIKA VALIDASI JAM PULANG
     if (status.jamPulangKantor) {
       const now = new Date();
       const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
@@ -217,26 +243,24 @@ export default function DashboardKaryawan() {
       const tooLate = currentMinutes > officeMinutes + 60;
 
       if (tooEarly || tooLate) {
-        // JIKA DI LUAR JAM KERJA: Tahan file, buka Modal
         setPendingFile(file);
         setIsTooEarly(tooEarly);
         setIsReasonModalOpen(true);
-        fileInput.value = ""; // Reset input
+        fileInput.value = "";
         return;
       }
     }
 
-    // JIKA TEPAT WAKTU: Langsung eksekusi
     executeCheckOut(file, "");
     fileInput.value = "";
   };
 
-  // 7. Handle Logout
+  // 6. Handle Logout
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
     } catch {
-      // abaikan error
+      /* abaikan error */
     }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -247,7 +271,6 @@ export default function DashboardKaryawan() {
     <div className="min-h-screen bg-surface-soft flex flex-col">
       <header className="bg-ink-deep border-b border-line px-6 py-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          {/* Brand */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue rounded-xl flex items-center justify-center shadow-lg shadow-blue/30 shrink-0">
               <span className="text-white text-lg font-bold leading-none font-sans translate-y-[0.5px]">
@@ -268,7 +291,6 @@ export default function DashboardKaryawan() {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-2 flex-wrap">
             {user?.role === "HRD" && (
               <button
@@ -358,8 +380,8 @@ export default function DashboardKaryawan() {
             </div>
           </div>
 
-          {/* Tampilan jika sedang izin, atau form presensi */}
-          {status.activePermission ? (
+          {/* TAMPILAN JIKA SEDANG IZIN ATAU FORM PRESENSI */}
+          {isOnLeave ? (
             <div className="p-6 text-center space-y-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
               <span className="text-3xl">⚠️</span>
               <h3 className="text-lg font-bold text-yellow-300">
@@ -367,18 +389,34 @@ export default function DashboardKaryawan() {
               </h3>
               <p className="text-sm text-yellow-200/80">
                 Berdasarkan data sistem, Anda sedang dalam masa{" "}
-                <strong>{status.activePermission}</strong> yang telah disetujui
-                hari ini. Anda tidak dapat melakukan Check-in atau Check-out.
+                <strong>{status.activePermission?.jenis}</strong>{" "}
+                {status.activePermission?.jamMulai &&
+                status.activePermission?.jamSelesai
+                  ? `dari jam ${status.activePermission.jamMulai} - ${status.activePermission.jamSelesai}`
+                  : "seharian penuh"}{" "}
+                yang telah disetujui. Anda tidak dapat melakukan Check-in atau
+                Check-out saat ini.
               </p>
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Info jika punya izin tapi belum masuk jamnya */}
+              {status.activePermission && status.activePermission.jamMulai && (
+                <div className="p-3 text-sm bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-xl">
+                  ℹ️ Catatan: Hari ini Anda memiliki izin pada jam{" "}
+                  <strong>
+                    {status.activePermission.jamMulai} -{" "}
+                    {status.activePermission.jamSelesai}
+                  </strong>
+                  . Silakan sesuaikan waktu check-in/out Anda.
+                </div>
+              )}
+
               {/* Check-in Section */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-ink-3">
                   1. Presensi Masuk
                 </label>
-                {/* Input disembunyikan, dipicu oleh tombol di bawahnya */}
                 <input
                   ref={checkInFileRef}
                   type="file"
@@ -451,7 +489,6 @@ export default function DashboardKaryawan() {
         </div>
       </main>
 
-      {/* Modal Alasan Check-out di luar jam kerja */}
       {isReasonModalOpen && (
         <CheckoutReasonModal
           isTooEarly={isTooEarly}
@@ -461,9 +498,7 @@ export default function DashboardKaryawan() {
             setPendingFile(null);
           }}
           onSubmit={(reason: string) => {
-            if (pendingFile) {
-              executeCheckOut(pendingFile, reason);
-            }
+            if (pendingFile) executeCheckOut(pendingFile, reason);
           }}
           loading={loading}
         />
