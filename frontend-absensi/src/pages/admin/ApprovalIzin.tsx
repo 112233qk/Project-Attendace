@@ -11,6 +11,8 @@ interface Permission {
   jenis: "IZIN" | "SAKIT" | "CUTI";
   tanggalMulai: string;
   tanggalSelesai: string;
+  jamMulai: string | null;
+  jamSelesai: string | null;
   alasan: string;
   buktiFile: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -256,8 +258,14 @@ export default function ApprovalIzin() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-xs text-muted whitespace-nowrap">
-                        {formatDate(p.tanggalMulai)} —{" "}
-                        {formatDate(p.tanggalSelesai)}
+                        {formatDate(p.tanggalMulai)}
+                        {p.jamMulai && p.jamSelesai && (
+                          <span className="block text-blue-300 font-semibold mt-0.5">
+                            {p.jamMulai} - {p.jamSelesai}
+                          </span>
+                        )}
+                        {p.tanggalMulai !== p.tanggalSelesai &&
+                          ` — ${formatDate(p.tanggalSelesai)}`}
                       </td>
                       <td className="py-3 px-4 max-w-xs">
                         <p className="text-ink truncate" title={p.alasan}>
@@ -356,6 +364,8 @@ export default function ApprovalIzin() {
         jenis={approveTarget?.jenis}
         tanggalMulai={approveTarget?.tanggalMulai}
         tanggalSelesai={approveTarget?.tanggalSelesai}
+        jamMulai={approveTarget?.jamMulai}
+        jamSelesai={approveTarget?.jamSelesai}
         onClose={() => setIsApproveOpen(false)}
         onSuccess={handleApproveSuccess}
       />

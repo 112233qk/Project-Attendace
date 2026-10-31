@@ -144,7 +144,7 @@ const fetchReportData = async (
     permissionsByUser.set(p.userId, arr);
   });
 
-  // Format record  // Format record
+  // Format record
   const records: ReportRecord[] = filtered.map((att) => {
     // Cari permission APPROVED yang overlap dengan tanggal absensi
     const userPerms = permissionsByUser.get(att.userId) || [];
@@ -152,8 +152,12 @@ const fetchReportData = async (
       isDateInRange(att.tanggal, p.tanggalMulai, p.tanggalSelesai)
     );
 
-    // Gabungkan jenis izin (jika ada) dengan keterangan dari attendance (jika ada)
-    const jenisIzin = matchedPerm ? matchedPerm.jenis : "";
+    // Tampilkan jam jika izin per jam
+    let jenisIzin = matchedPerm ? matchedPerm.jenis : "";
+    if (matchedPerm && matchedPerm.jamMulai && matchedPerm.jamSelesai) {
+      jenisIzin = `${matchedPerm.jenis} (${matchedPerm.jamMulai} - ${matchedPerm.jamSelesai})`;
+    }
+
     const ketAttendance = att.keterangan ? att.keterangan : "";
 
     // Filter nilai kosong dan gabungkan dengan pemisah " | "

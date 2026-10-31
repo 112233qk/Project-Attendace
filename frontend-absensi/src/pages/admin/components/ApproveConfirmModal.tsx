@@ -9,6 +9,8 @@ interface Props {
   jenis?: string;
   tanggalMulai?: string;
   tanggalSelesai?: string;
+  jamMulai?: string | null;
+  jamSelesai?: string | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -29,6 +31,8 @@ export default function ApproveConfirmModal({
   jenis,
   tanggalMulai,
   tanggalSelesai,
+  jamMulai,
+  jamSelesai,
   onClose,
   onSuccess,
 }: Props) {
@@ -85,11 +89,18 @@ export default function ApproveConfirmModal({
               </div>
             )}
             {tanggalMulai && tanggalSelesai && (
-              <div className="flex justify-between">
+              <div className="flex justify-between items-start">
                 <span className="text-muted">Periode</span>
-                <span className="font-semibold text-ink">
-                  {formatDate(tanggalMulai)} — {formatDate(tanggalSelesai)}
-                </span>
+                <div className="text-right">
+                  <span className="font-semibold text-ink block">
+                    {formatDate(tanggalMulai)} — {formatDate(tanggalSelesai)}
+                  </span>
+                  {jamMulai && jamSelesai && (
+                    <span className="text-xs text-blue-300 font-semibold">
+                      Pukul {jamMulai} - {jamSelesai}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </div>
