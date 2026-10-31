@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import api from "../lib/api";
 import { compressImage } from "../lib/imageCompression";
+import CheckoutReasonModal from "../components/CheckoutReasonModal";
 
 interface AttendanceStatus {
   hasCheckedIn: boolean;
@@ -23,6 +24,9 @@ export default function DashboardKaryawan() {
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [isTooEarly, setIsTooEarly] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null
   );
@@ -154,54 +158,15 @@ export default function DashboardKaryawan() {
     }
   };
 
-  // 6. Handle Check-out
-  const handleCheckOut = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!location) {
-      alert(
-        "Lokasi GPS belum terdeteksi. Izinkan akses lokasi pada browser Anda."
-      );
-      return;
-    }
-
-    const fileInput = e.target;
-    if (!fileInput.files || fileInput.files.length === 0) return;
-
-    let alasanPulang = "";
-
-    // LOGIKA VALIDASI JAM PULANG
-    if (status.jamPulangKantor) {
-      const now = new Date();
-      const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-      const currentMinutes = wib.getUTCHours() * 60 + wib.getUTCMinutes();
-
-      const [h, m] = status.jamPulangKantor.split(":").map(Number);
-      const officeMinutes = (h ?? 0) * 60 + (m ?? 0);
-
-      const isTooEarly = currentMinutes < officeMinutes;
-      const isTooLate = currentMinutes > officeMinutes + 60;
-
-      if (isTooEarly || isTooLate) {
-        const input = window.prompt(
-          `Anda melakukan check-out di luar jam kerja (${status.jamPulangKantor}).\nMohon berikan alasan Anda:`
-        );
-
-        if (!input || input.trim() === "") {
-          alert("Check-out dibatalkan. Anda wajib memberikan alasan.");
-          fileInput.value = "";
-          return; // Hentikan proses
-        }
-        alasanPulang = input.trim();
-      }
-    }
-
+  // 6a. Fungsi Eksekusi Check-out (Dipanggil dari normal flow atau Modal)
+  const executeCheckOut = async (file: File, alasanPulang: string) => {
     setLoading(true);
     try {
-      const originalFile = fileInput.files[0];
-      const compressedFile = await compressImage(originalFile, 1);
+      const compressedFile = await compressImage(file, 1);
 
       const formData = new FormData();
-      formData.append("latitude", location.lat.toString());
-      formData.append("longitude", location.lng.toString());
+      formData.append("latitude", location!.lat.toString());
+      formData.append("longitude", location!.lng.toString());
       formData.append("fotoPulang", compressedFile);
 
       if (alasanPulang) {
@@ -214,6 +179,8 @@ export default function DashboardKaryawan() {
 
       alert("Check-out Berhasil!");
       fetchTodayStatus();
+      setIsReasonModalOpen(false);
+      setPendingFile(null);
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         alert(err.response?.data?.message || "Gagal melakukan Check-out.");
@@ -221,9 +188,47 @@ export default function DashboardKaryawan() {
         alert("Terjadi kesalahan yang tidak diketahui.");
       }
     } finally {
-      fileInput.value = "";
       setLoading(false);
     }
+  };
+
+  // 6b. Handle Check-out (Validasi sebelum eksekusi)
+  const handleCheckOut = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!location) {
+      alert("Lokasi GPS belum terdeteksi.");
+      return;
+    }
+
+    const fileInput = e.target;
+    if (!fileInput.files || fileInput.files.length === 0) return;
+
+    const file = fileInput.files[0];
+
+    // LOGIKA VALIDASI JAM PULANG
+    if (status.jamPulangKantor) {
+      const now = new Date();
+      const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      const currentMinutes = wib.getUTCHours() * 60 + wib.getUTCMinutes();
+
+      const [h, m] = status.jamPulangKantor.split(":").map(Number);
+      const officeMinutes = (h ?? 0) * 60 + (m ?? 0);
+
+      const tooEarly = currentMinutes < officeMinutes;
+      const tooLate = currentMinutes > officeMinutes + 60;
+
+      if (tooEarly || tooLate) {
+        // JIKA DI LUAR JAM KERJA: Tahan file, buka Modal
+        setPendingFile(file);
+        setIsTooEarly(tooEarly);
+        setIsReasonModalOpen(true);
+        fileInput.value = ""; // Reset input
+        return;
+      }
+    }
+
+    // JIKA TEPAT WAKTU: Langsung eksekusi
+    executeCheckOut(file, "");
+    fileInput.value = "";
   };
 
   // 7. Handle Logout
@@ -445,6 +450,24 @@ export default function DashboardKaryawan() {
           )}
         </div>
       </main>
+
+      {/* Modal Alasan Check-out di luar jam kerja */}
+      {isReasonModalOpen && (
+        <CheckoutReasonModal
+          isTooEarly={isTooEarly}
+          jamPulang={status.jamPulangKantor || "17:00"}
+          onClose={() => {
+            setIsReasonModalOpen(false);
+            setPendingFile(null);
+          }}
+          onSubmit={(reason: string) => {
+            if (pendingFile) {
+              executeCheckOut(pendingFile, reason);
+            }
+          }}
+          loading={loading}
+        />
+      )}
     </div>
   );
 }
