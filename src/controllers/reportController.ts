@@ -144,13 +144,21 @@ const fetchReportData = async (
     permissionsByUser.set(p.userId, arr);
   });
 
-  // Format record
+  // Format record  // Format record
   const records: ReportRecord[] = filtered.map((att) => {
     // Cari permission APPROVED yang overlap dengan tanggal absensi
     const userPerms = permissionsByUser.get(att.userId) || [];
     const matchedPerm = userPerms.find((p) =>
       isDateInRange(att.tanggal, p.tanggalMulai, p.tanggalSelesai)
     );
+
+    // Gabungkan jenis izin (jika ada) dengan keterangan dari attendance (jika ada)
+    const jenisIzin = matchedPerm ? matchedPerm.jenis : "";
+    const ketAttendance = att.keterangan ? att.keterangan : "";
+
+    // Filter nilai kosong dan gabungkan dengan pemisah " | "
+    const finalKeterangan =
+      [jenisIzin, ketAttendance].filter((val) => val !== "").join(" | ") || "-";
 
     return {
       nik: att.user.nik,
@@ -161,7 +169,7 @@ const fetchReportData = async (
       statusMasuk: att.statusMasuk || "-",
       jamPulang: formatTimeWIB(att.jamPulang),
       totalJamKerja: calculateWorkHours(att.jamMasuk, att.jamPulang),
-      keterangan: matchedPerm ? matchedPerm.jenis : "-",
+      keterangan: finalKeterangan,
     };
   });
 
