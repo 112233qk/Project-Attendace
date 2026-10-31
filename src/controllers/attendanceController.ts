@@ -238,7 +238,6 @@ export const checkOut = async (req: Request, res: Response) => {
 
     const fotoPulang = req.file ? `/uploads/${req.file.filename}` : null;
 
-    // Fix Error 3: Gunakan objek dinamis agar TypeScript tidak protes soal 'undefined'
     const updateData: any = {
       jamPulang: nowUTC,
       latPulang: latNum,
@@ -264,6 +263,57 @@ export const checkOut = async (req: Request, res: Response) => {
     );
   } catch (error: any) {
     console.error("Check-out Error:", error);
+    return sendResponse(
+      res,
+      500,
+      false,
+      error.message || "Terjadi kesalahan pada server."
+    );
+  }
+};
+
+// 3. ENDPOINT RIWAYAT ABSENSI (Untuk Rekap Admin/HRD)
+export const getAttendanceHistory = async (req: Request, res: Response) => {
+  try {
+    const { id: currentUserId, role } = req.user!;
+    const { userId, tanggal } = req.query;
+
+    let whereClause: any = {};
+
+    // RBAC: Karyawan hanya bisa melihat milik sendiri
+    if (role === "KARYAWAN") {
+      whereClause.userId = currentUserId;
+    } else {
+      // HRD & ADMIN bisa melihat semua, atau filter berdasarkan userId
+      if (userId) {
+        whereClause.userId = parseInt(userId as string);
+      }
+    }
+
+    // Filter berdasarkan tanggal (opsional)
+    if (tanggal && typeof tanggal === "string") {
+      whereClause.tanggal = new Date(tanggal);
+    }
+
+    const history = await prisma.attendance.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: { nama: true, nik: true, email: true },
+        },
+      },
+      orderBy: { tanggal: "desc" },
+    });
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Riwayat absensi berhasil diambil.",
+      history
+    );
+  } catch (error: any) {
+    console.error("Get History Error:", error);
     return sendResponse(
       res,
       500,
