@@ -30,24 +30,24 @@ export default function AjukanIzin() {
     setError(null);
     setSuccess(false);
 
-    // Validasi client-side
-    if (!tanggalMulai || !tanggalSelesai) {
+    // 1. TENTUKAN TANGGAL SELESAI FINAL
+    // Jika mode per jam, paksa tanggal selesai = tanggal mulai
+    const finalTanggalSelesai = isHourly ? tanggalMulai : tanggalSelesai;
+
+    // 2. VALIDASI TANGGAL
+    if (!tanggalMulai || !finalTanggalSelesai) {
       setError("Tanggal mulai dan selesai wajib diisi.");
       return;
     }
-    if (new Date(tanggalMulai) > new Date(tanggalSelesai)) {
+    if (new Date(tanggalMulai) > new Date(finalTanggalSelesai)) {
       setError(
         "Tanggal mulai harus lebih awal atau sama dengan tanggal selesai."
       );
       return;
     }
 
-    // VALIDASI IZIN PER JAM
+    // 3. VALIDASI IZIN PER JAM
     if (isHourly) {
-      if (tanggalMulai !== tanggalSelesai) {
-        setError("Izin per jam hanya dapat diajukan untuk 1 hari yang sama.");
-        return;
-      }
       if (!jamMulai || !jamSelesai) {
         setError("Jam mulai dan jam selesai wajib diisi untuk izin per jam.");
         return;
@@ -58,6 +58,7 @@ export default function AjukanIzin() {
       }
     }
 
+    // 4. VALIDASI ALASAN & BUKTI
     if (alasan.trim().length < 5) {
       setError("Alasan minimal 5 karakter.");
       return;
@@ -75,10 +76,11 @@ export default function AjukanIzin() {
       const formData = new FormData();
       formData.append("jenis", jenis);
       formData.append("tanggalMulai", tanggalMulai);
-      formData.append("tanggalSelesai", tanggalSelesai);
+      // Gunakan finalTanggalSelesai yang sudah dipastikan aman
+      formData.append("tanggalSelesai", finalTanggalSelesai);
       formData.append("alasan", alasan.trim());
 
-      // KIRIM JAM JIKA MEMILIH PER JAM
+      // Kirim jam jika memilih per jam
       if (isHourly) {
         formData.append("jamMulai", jamMulai);
         formData.append("jamSelesai", jamSelesai);
@@ -244,28 +246,27 @@ export default function AjukanIzin() {
                   required
                   min={today}
                   value={tanggalMulai}
-                  onChange={(e) => {
-                    setTanggalMulai(e.target.value);
-                    // Jika mode per jam, otomatis ikuti tanggal mulai
-                    if (isHourly) setTanggalSelesai(e.target.value);
-                  }}
+                  onChange={(e) => setTanggalMulai(e.target.value)}
                   className="w-full px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-ink-3 mb-2">
-                  Tanggal Selesai *
-                </label>
-                <input
-                  type="date"
-                  required
-                  min={tanggalMulai || today}
-                  value={tanggalSelesai}
-                  onChange={(e) => setTanggalSelesai(e.target.value)}
-                  readOnly={isHourly}
-                  className="w-full px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none disabled:opacity-50"
-                />
-              </div>
+
+              {/* HANYA MUNCUL JIKA BUKAN IZIN PER JAM */}
+              {!isHourly && (
+                <div>
+                  <label className="block text-sm font-semibold text-ink-3 mb-2">
+                    Tanggal Selesai *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    min={tanggalMulai || today}
+                    value={tanggalSelesai}
+                    onChange={(e) => setTanggalSelesai(e.target.value)}
+                    className="w-full px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Jam (Hanya muncul jika memilih Beberapa Jam) */}
