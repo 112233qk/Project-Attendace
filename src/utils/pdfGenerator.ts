@@ -1,4 +1,6 @@
 import PDFDocument from "pdfkit";
+import path from "path";
+import fs from "fs";
 
 export interface ReportRecord {
   nik: string;
@@ -24,10 +26,6 @@ export interface ReportData {
   };
 }
 
-/**
- * Generate PDF laporan absensi (landscape A4).
- * Return sebagai Buffer untuk dikirim langsung via response.
- */
 export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     try {
@@ -49,12 +47,37 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
       const contentWidth = pageWidth - marginLeft * 2;
 
       // ============================================
-      // HEADER
+      // HEADER DENGAN LOGO & NAMA PT
       // ============================================
-      doc.fontSize(16).font("Helvetica-Bold").fillColor("#000000");
-      doc.text("LAPORAN ABSENSI KARYAWAN", { align: "center" });
+      const logoPath = path.join(process.cwd(), "public", "logo.png");
 
-      doc.moveDown(0.3);
+      // Gambar Logo (jika ada)
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, marginLeft, 30, { width: 55 });
+      }
+
+      // Teks Nama PT (di sebelah kanan logo)
+      doc.fontSize(16).font("Helvetica-Bold").fillColor("#000000");
+      doc.text("PT. ARIDEV STUDIO CREATIVE", marginLeft + 70, 38);
+
+      doc.fontSize(10).font("Helvetica").fillColor("#333333");
+      doc.text("Sistem Informasi Manajemen Absensi", marginLeft + 70, 58);
+
+      // Garis Horizontal Pemisah Header
+      doc
+        .moveTo(marginLeft, 95)
+        .lineTo(pageWidth - marginLeft, 95)
+        .strokeColor("#cccccc")
+        .stroke();
+
+      // ============================================
+      // JUDUL LAPORAN (Tengah)
+      // ============================================
+      doc.fontSize(14).font("Helvetica-Bold").fillColor("#000000");
+      doc.text("LAPORAN ABSENSI KARYAWAN", marginLeft, 115, {
+        align: "center",
+      });
+
       doc.fontSize(10).font("Helvetica").fillColor("#333333");
       doc.text(`Periode: ${data.periode.mulai} s/d ${data.periode.selesai}`, {
         align: "center",
@@ -64,7 +87,6 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
         doc.text(`Kantor: ${data.officeFilter}`, { align: "center" });
       }
 
-      doc.moveDown(0.3);
       doc.fontSize(8).fillColor("#666666");
       doc.text(
         `Dicetak pada: ${new Date().toLocaleString("id-ID", {
@@ -73,7 +95,8 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
         { align: "center" }
       );
 
-      doc.moveDown(0.8);
+      // Set posisi Y untuk tabel
+      let y = 170;
 
       // ============================================
       // TABEL HEADER
@@ -93,9 +116,7 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
 
       const rowHeight = 20;
       const headerHeight = 22;
-      let y = doc.y;
 
-      // Fungsi: render header tabel
       const renderTableHeader = (yPos: number) => {
         let x = marginLeft;
         doc.rect(marginLeft, yPos, contentWidth, headerHeight).fill("#2c3e50");
@@ -112,7 +133,6 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
         return yPos + headerHeight;
       };
 
-      // Fungsi: render baris data
       const renderTableRow = (
         yPos: number,
         record: ReportRecord,
@@ -172,9 +192,9 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
         y += 40;
       } else {
         data.records.forEach((record, index) => {
-          // Cek apakah perlu page break
           if (y + rowHeight > pageHeight - 80) {
             doc.addPage({ size: "A4", layout: "landscape", margin: 30 });
+            // Jika pindah halaman, render ulang header tabel di atas
             y = renderTableHeader(30);
           }
           y = renderTableRow(y, record, index);
@@ -186,10 +206,9 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
       // ============================================
       y += 20;
 
-      // Cek ruang untuk rekapitulasi
       if (y + 100 > pageHeight - 30) {
         doc.addPage({ size: "A4", layout: "landscape", margin: 30 });
-        y = 40;
+        y = 30;
       }
 
       doc.rect(marginLeft, y, 300, 90).fill("#ecf0f1").stroke("#bdc3c7");
@@ -222,7 +241,10 @@ export const generateAttendancePdf = (data: ReportData): Promise<Buffer> => {
           `Halaman ${i + 1} dari ${range.count}`,
           marginLeft,
           pageHeight - 25,
-          { width: contentWidth, align: "right" }
+          {
+            width: contentWidth,
+            align: "right",
+          }
         );
       }
 

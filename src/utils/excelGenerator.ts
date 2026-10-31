@@ -1,13 +1,8 @@
 import ExcelJS from "exceljs";
+import path from "path";
+import fs from "fs";
 import { ReportData } from "./pdfGenerator";
 
-/**
- * Generate Excel laporan absensi (.xlsx).
- * Return sebagai Buffer untuk dikirim langsung via response.
- *
- * Sesuai SRS 3.5: format tabel bersih tanpa merged cells pada area data
- * untuk memudahkan pemrosesan lanjut (payroll, dll).
- */
 export const generateAttendanceExcel = async (
   data: ReportData
 ): Promise<Buffer> => {
@@ -17,31 +12,73 @@ export const generateAttendanceExcel = async (
 
   const sheet = workbook.addWorksheet("Laporan Absensi", {
     pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1 },
-    views: [{ state: "frozen", ySplit: 3 }],
   });
 
+  const logoPath = path.join(process.cwd(), "public", "logo.png");
+
   // ============================================
-  // HEADER JUDUL (tanpa merged cells di area data)
+  // HEADER DENGAN LOGO & NAMA PT
   // ============================================
-  // Baris 1: Judul
-  sheet.getCell("A1").value = "LAPORAN ABSENSI KARYAWAN";
-  sheet.getCell("A1").font = { bold: true, size: 14 };
 
-  // Baris 2: Periode & kantor
-  const periodeText = `Periode: ${data.periode.mulai} s/d ${data.periode.selesai}`;
-  const kantorText =
-    data.officeFilter !== "Semua Kantor"
-      ? ` | Kantor: ${data.officeFilter}`
-      : "";
+  // 1. Sisipkan Logo
+  if (fs.existsSync(logoPath)) {
+    const imageId = workbook.addImage({
+      filename: logoPath,
+      extension: "png",
+    });
+    sheet.addImage(imageId, {
+      tl: { col: 0, row: 0 }, // Top-Left (Cell A1)
+      ext: { width: 60, height: 60 }, // Ukuran logo
+    });
+  }
 
-  sheet.getCell("A2").value = `${periodeText}${kantorText}`;
-  sheet.getCell("A2").font = { size: 10, italic: true };
+  // Set tinggi baris 1 dan 2 agar logo muat
+  sheet.getRow(1).height = 35;
+  sheet.getRow(2).height = 25;
 
-  // Baris 3: kosong (spacer)
+  // 2. Nama PT (di Cell C1)
+  sheet.mergeCells("C1:J1");
+  const titleCell = sheet.getCell("C1");
+  titleCell.value = "PT. ARIDEV STUDIO CREATIVE";
+  titleCell.font = { bold: true, size: 16, color: { argb: "FF000000" } };
+  titleCell.alignment = { vertical: "middle", horizontal: "left" };
+
+  // 3. Subtitle (di Cell C2)
+  sheet.mergeCells("C2:J2");
+  const subCell = sheet.getCell("C2");
+  subCell.value = "Sistem Informasi Manajemen Absensi";
+  subCell.font = { size: 11, color: { argb: "FF333333" } };
+  subCell.alignment = { vertical: "middle", horizontal: "left" };
+
+  // Baris 3: Kosong sebagai jarak
   sheet.addRow([]);
 
   // ============================================
-  // HEADER TABEL (Baris 4)
+  // JUDUL LAPORAN (Tengah)
+  // ============================================
+  sheet.mergeCells("A4:J4");
+  const reportTitle = sheet.getCell("A4");
+  reportTitle.value = "LAPORAN ABSENSI KARYAWAN";
+  reportTitle.font = { bold: true, size: 14 };
+  reportTitle.alignment = { horizontal: "center", vertical: "middle" };
+
+  const periodeText =
+    `Periode: ${data.periode.mulai} s/d ${data.periode.selesai}` +
+    (data.officeFilter !== "Semua Kantor"
+      ? ` | Kantor: ${data.officeFilter}`
+      : "");
+
+  sheet.mergeCells("A5:J5");
+  const periodCell = sheet.getCell("A5");
+  periodCell.value = periodeText;
+  periodCell.font = { italic: true, size: 10 };
+  periodCell.alignment = { horizontal: "center", vertical: "middle" };
+
+  // Baris 6: Kosong (Jarak sebelum tabel)
+  sheet.addRow([]);
+
+  // ============================================
+  // HEADER TABEL (Baris 7)
   // ============================================
   const headerRow = sheet.addRow([
     "No",
@@ -56,7 +93,6 @@ export const generateAttendanceExcel = async (
     "Keterangan",
   ]);
 
-  // Style header
   headerRow.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
     cell.fill = {
@@ -73,6 +109,9 @@ export const generateAttendanceExcel = async (
     };
   });
   headerRow.height = 22;
+
+  // Freeze Pane tepat di bawah header tabel (Baris 8)
+  sheet.views = [{ state: "frozen", ySplit: 7 }];
 
   // ============================================
   // DATA ROWS
@@ -102,7 +141,6 @@ export const generateAttendanceExcel = async (
         record.keterangan,
       ]);
 
-      // Zebra striping
       const bgColor = index % 2 === 0 ? "FFFFFFFF" : "FFF5F5F5";
       row.eachCell((cell) => {
         cell.fill = {
@@ -119,13 +157,12 @@ export const generateAttendanceExcel = async (
         };
       });
 
-      // Alignment khusus untuk kolom tertentu
-      row.getCell(1).alignment = { horizontal: "center" }; // No
-      row.getCell(5).alignment = { horizontal: "center" }; // Tanggal
-      row.getCell(6).alignment = { horizontal: "center" }; // Jam Masuk
-      row.getCell(7).alignment = { horizontal: "center" }; // Status
-      row.getCell(8).alignment = { horizontal: "center" }; // Jam Pulang
-      row.getCell(9).alignment = { horizontal: "center" }; // Total Jam
+      row.getCell(1).alignment = { horizontal: "center" };
+      row.getCell(5).alignment = { horizontal: "center" };
+      row.getCell(6).alignment = { horizontal: "center" };
+      row.getCell(7).alignment = { horizontal: "center" };
+      row.getCell(8).alignment = { horizontal: "center" };
+      row.getCell(9).alignment = { horizontal: "center" };
     });
   }
 
@@ -162,9 +199,6 @@ export const generateAttendanceExcel = async (
     column.width = widths[index] ?? 15;
   });
 
-  // ============================================
-  // EXPORT KE BUFFER
-  // ============================================
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
 };
