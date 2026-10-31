@@ -217,7 +217,11 @@ export default function AjukanIzin() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsHourly(true)}
+                  onClick={() => {
+                    setIsHourly(true);
+                    // Otomatis samakan tanggal selesai dengan tanggal mulai
+                    setTanggalSelesai(tanggalMulai);
+                  }}
                   className={`py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer border-2 ${
                     isHourly
                       ? "bg-blue text-white border-blue shadow-lg shadow-blue/20"
@@ -240,7 +244,11 @@ export default function AjukanIzin() {
                   required
                   min={today}
                   value={tanggalMulai}
-                  onChange={(e) => setTanggalMulai(e.target.value)}
+                  onChange={(e) => {
+                    setTanggalMulai(e.target.value);
+                    // Jika mode per jam, otomatis ikuti tanggal mulai
+                    if (isHourly) setTanggalSelesai(e.target.value);
+                  }}
                   className="w-full px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none"
                 />
               </div>
@@ -254,7 +262,7 @@ export default function AjukanIzin() {
                   min={tanggalMulai || today}
                   value={tanggalSelesai}
                   onChange={(e) => setTanggalSelesai(e.target.value)}
-                  disabled={isHourly} // Kunci tanggal selesai jika per jam
+                  readOnly={isHourly}
                   className="w-full px-4 py-3 bg-surface-soft border border-line rounded-xl focus:ring-2 focus:ring-blue focus:border-blue outline-none disabled:opacity-50"
                 />
               </div>
