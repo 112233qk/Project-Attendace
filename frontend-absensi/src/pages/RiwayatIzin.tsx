@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useToast } from "../components/ui/ToastProvider";
+import FilePreviewModal from "./admin/components/FilePreviewModal";
+
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.replace("/api", "") ||
+  "https://project-attendace.onrender.com";
 
 interface Permission {
   id: number;
@@ -15,14 +20,32 @@ interface Permission {
   status: "PENDING" | "APPROVED" | "REJECTED";
   rejectionReason: string | null;
   createdAt: string;
+  updatedAt: string;
+  approver?: {
+    id: number;
+    nama: string;
+    role: string;
+  } | null;
 }
 
+// Format tanggal: "2026-09-29T00:00:00.000Z" → "29/09/2026"
 const formatDate = (iso: string): string => {
   const d = new Date(iso);
   const day = String(d.getUTCDate()).padStart(2, "0");
   const month = String(d.getUTCMonth() + 1).padStart(2, "0");
   const year = d.getUTCFullYear();
   return `${day}/${month}/${year}`;
+};
+
+// Format waktu proses: "29/09/2026 14:30"
+const formatDateTime = (iso: string): string => {
+  const d = new Date(iso);
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  const hour = String(d.getUTCHours() + 7).padStart(2, "0");
+  const min = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year} ${hour}:${min}`;
 };
 
 const getStatusBadge = (status: string) => {
@@ -58,6 +81,7 @@ export default function RiwayatIzin() {
   const [loading, setLoading] = useState(true);
   const [cancelTarget, setCancelTarget] = useState<Permission | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -135,7 +159,7 @@ export default function RiwayatIzin() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto p-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-6">
         <div className="bg-surface rounded-2xl shadow-sm border border-line overflow-hidden">
           {loading ? (
             <div className="p-8 text-center text-muted">Memuat data...</div>
@@ -155,11 +179,14 @@ export default function RiwayatIzin() {
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
-                    <th className="py-3 px-4">Jenis</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Jenis</th>
                     <th className="py-3 px-4 whitespace-nowrap">Periode</th>
                     <th className="py-3 px-4">Alasan</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Aksi</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Bukti</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -197,7 +224,21 @@ export default function RiwayatIzin() {
                           </p>
                         )}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {p.buktiFile ? (
+                          <button
+                            onClick={() =>
+                              setPreviewFile(`${BASE_URL}${p.buktiFile}`)
+                            }
+                            className="text-xs bg-surface-blue text-blue px-2 py-1 rounded hover:bg-blue-2/20 cursor-pointer"
+                          >
+                            📎 Lihat
+                          </button>
+                        ) : (
+                          <span className="text-xs text-muted">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <span
                           className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(
                             p.status
@@ -205,6 +246,13 @@ export default function RiwayatIzin() {
                         >
                           {p.status}
                         </span>
+                        {p.status !== "PENDING" && p.approver && (
+                          <p className="text-[10px] text-muted mt-1 leading-tight">
+                            Oleh: {p.approver.nama}
+                            <br />
+                            {formatDateTime(p.updatedAt)}
+                          </p>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right">
                         {p.status === "PENDING" && (
@@ -262,6 +310,13 @@ export default function RiwayatIzin() {
           </div>
         </div>
       )}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        isOpen={!!previewFile}
+        fileUrl={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </div>
   );
 }
