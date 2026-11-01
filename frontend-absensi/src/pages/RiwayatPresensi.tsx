@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import FilePreviewModal from "./admin/components/FilePreviewModal";
+
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.replace("/api", "") ||
+  "https://project-attendace.onrender.com";
 
 interface AttendanceRecord {
   id: number;
@@ -11,6 +16,8 @@ interface AttendanceRecord {
   statusMasuk: string | null;
   metodeMasuk: string | null;
   keterangan: string | null;
+  fotoMasuk: string | null;
+  fotoPulang: string | null;
   user?: {
     nama: string;
     nik: string;
@@ -42,6 +49,7 @@ export default function RiwayatPresensi() {
   const navigate = useNavigate();
   const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -85,7 +93,7 @@ export default function RiwayatPresensi() {
         </button>
       </header>
 
-      <main className="flex-1 max-w-4xl w-full mx-auto p-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-6">
         <div className="bg-surface rounded-2xl shadow-sm border border-line overflow-hidden">
           {loading ? (
             <div className="p-8 text-center text-muted">
@@ -101,6 +109,7 @@ export default function RiwayatPresensi() {
                 <thead>
                   <tr className="bg-surface-soft border-b border-line text-muted font-semibold">
                     <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Foto</th>
                     <th className="py-3 px-4 whitespace-nowrap">Check-in</th>
                     <th className="py-3 px-4 whitespace-nowrap">Check-out</th>
                     <th className="py-3 px-4 whitespace-nowrap">Status</th>
@@ -112,6 +121,34 @@ export default function RiwayatPresensi() {
                     <tr key={item.id} className="hover:bg-surface-soft/50">
                       <td className="py-3 px-4 font-medium text-ink whitespace-nowrap">
                         {formatDate(item.tanggal)}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          {item.fotoMasuk ? (
+                            <button
+                              onClick={() =>
+                                setPreviewFile(`${BASE_URL}${item.fotoMasuk}`)
+                              }
+                              className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded hover:bg-blue-500/30 cursor-pointer"
+                            >
+                              Masuk
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted">-</span>
+                          )}
+                          {item.fotoPulang ? (
+                            <button
+                              onClick={() =>
+                                setPreviewFile(`${BASE_URL}${item.fotoPulang}`)
+                              }
+                              className="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded hover:bg-orange-500/30 cursor-pointer"
+                            >
+                              Pulang
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted">-</span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-emerald-400 font-medium whitespace-nowrap">
                         {formatTime(item.jamMasuk)}
@@ -132,7 +169,10 @@ export default function RiwayatPresensi() {
                           {item.statusMasuk || "-"}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-muted whitespace-nowrap">
+                      <td
+                        className="py-3 px-4 text-muted whitespace-nowrap truncate max-w-[200px]"
+                        title={item.keterangan || ""}
+                      >
                         {item.keterangan || "-"}
                       </td>
                     </tr>
@@ -143,6 +183,13 @@ export default function RiwayatPresensi() {
           )}
         </div>
       </main>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        isOpen={!!previewFile}
+        fileUrl={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
     </div>
   );
 }
