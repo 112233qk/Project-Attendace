@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import api from "../lib/api";
 import { compressImage } from "../lib/imageCompression";
 import CheckoutReasonModal from "../components/CheckoutReasonModal";
+import LateReasonModal from "../components/LateReasonModal.tsx";
 
 interface ActivePermission {
   jenis: string;
@@ -17,6 +18,7 @@ interface AttendanceStatus {
   checkInTime: string | null;
   checkOutTime: string | null;
   activePermission: ActivePermission | null;
+  jamMasukKantor: string | null;
   jamPulangKantor: string | null;
 }
 
@@ -33,6 +35,10 @@ export default function DashboardKaryawan() {
   const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isTooEarly, setIsTooEarly] = useState(false);
+  const [isLateModalOpen, setIsLateModalOpen] = useState(false);
+  const [pendingCheckInFile, setPendingCheckInFile] = useState<File | null>(
+    null
+  );
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null
   );
@@ -47,6 +53,7 @@ export default function DashboardKaryawan() {
     checkInTime: null,
     checkOutTime: null,
     activePermission: null,
+    jamMasukKantor: null,
     jamPulangKantor: null,
   });
 
@@ -145,27 +152,20 @@ export default function DashboardKaryawan() {
   const isOnLeave = checkIsCurrentlyOnLeave();
 
   // 4. Handle Check-in
-  const handleCheckIn = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!location) {
-      alert(
-        "Lokasi GPS belum terdeteksi. Izinkan akses lokasi pada browser Anda."
-      );
-      return;
-    }
-
-    const fileInput = e.target;
-    if (!fileInput.files || fileInput.files.length === 0) return;
-
+  const executeCheckIn = async (file: File, alasanTelat: string) => {
     setLoading(true);
     try {
-      const originalFile = fileInput.files[0];
-      const compressedFile = await compressImage(originalFile, 1);
+      const compressedFile = await compressImage(file, 1);
 
       const formData = new FormData();
-      formData.append("latitude", location.lat.toString());
-      formData.append("longitude", location.lng.toString());
+      formData.append("latitude", location!.lat.toString());
+      formData.append("longitude", location!.lng.toString());
       formData.append("metodeMasuk", "GPS");
       formData.append("fotoMasuk", compressedFile);
+
+      if (alasanTelat) {
+        formData.append("alasanTelat", alasanTelat);
+      }
 
       await api.post("/attendances/check-in", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -173,6 +173,8 @@ export default function DashboardKaryawan() {
 
       alert("Check-in Berhasil!");
       fetchTodayStatus();
+      setIsLateModalOpen(false);
+      setPendingCheckInFile(null);
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         alert(err.response?.data?.message || "Gagal melakukan Check-in.");
@@ -180,9 +182,43 @@ export default function DashboardKaryawan() {
         alert("Terjadi kesalahan yang tidak diketahui.");
       }
     } finally {
-      fileInput.value = "";
       setLoading(false);
     }
+  };
+
+  // 2. Handle Check-in (Intervensi sebelum upload)
+  const handleCheckIn = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!location) {
+      alert("Lokasi GPS belum terdeteksi.");
+      return;
+    }
+
+    const fileInput = e.target;
+    if (!fileInput.files || fileInput.files.length === 0) return;
+
+    const file = fileInput.files[0];
+
+    // Cek apakah terlambat
+    if (status.jamMasukKantor) {
+      const now = new Date();
+      const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      const currentTime =
+        String(wib.getUTCHours()).padStart(2, "0") +
+        ":" +
+        String(wib.getUTCMinutes()).padStart(2, "0");
+
+      // Jika waktu sekarang lebih dari jam masuk kantor
+      if (currentTime > status.jamMasukKantor) {
+        setPendingCheckInFile(file);
+        setIsLateModalOpen(true);
+        fileInput.value = ""; // Reset
+        return;
+      }
+    }
+
+    // Jika tepat waktu, langsung eksekusi
+    executeCheckIn(file, "");
+    fileInput.value = "";
   };
 
   // 5a. Fungsi Eksekusi Check-out
@@ -499,6 +535,24 @@ export default function DashboardKaryawan() {
           }}
           onSubmit={(reason: string) => {
             if (pendingFile) executeCheckOut(pendingFile, reason);
+          }}
+          loading={loading}
+        />
+      )}
+
+      {/* Modal Alasan Telat Check-in */}
+      {isLateModalOpen && (
+        <LateReasonModal
+          isOpen={isLateModalOpen}
+          jamMasuk={status.jamMasukKantor || "08:00"}
+          onClose={() => {
+            setIsLateModalOpen(false);
+            setPendingCheckInFile(null);
+          }}
+          onSubmit={(reason: string) => {
+            if (pendingCheckInFile) {
+              executeCheckIn(pendingCheckInFile, reason);
+            }
           }}
           loading={loading}
         />
