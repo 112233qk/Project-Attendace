@@ -67,7 +67,9 @@
     ],
     "coveragePathIgnorePatterns": [
       "/node_modules/",
-      "/dist/"
+      "/tests/",
+      "/dist/",
+      "src/controllers/seedController.ts"
     ]
   }
 }

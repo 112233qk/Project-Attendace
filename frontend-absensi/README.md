@@ -30,6 +30,8 @@ frontend-absensi/
 │   │   │   ├── Spinner.tsx
 │   │   │   ├── Toast.tsx
 │   │   │   └── ToastProvider.tsx
+│   │   ├── CheckoutReasonModal.tsx
+│   │   ├── LateReasonModal.tsx
 │   │   └── ProtectedRoute.tsx
 │   ├── lib/
 │   │   ├── api.ts
@@ -58,11 +60,11 @@ frontend-absensi/
 │   │   ├── Profil.tsx
 │   │   ├── RiwayatIzin.tsx
 │   │   └── RiwayatPresensi.tsx
-│   ├── vite-env.d.ts
 │   ├── App.css
 │   ├── App.tsx
 │   ├── index.css
-│   └── main.tsx
+│   ├── main.tsx
+│   └── vite-env.d.ts
 ├── eslint.config.js
 ├── index.html
 ├── package-lock.json
@@ -100,7 +102,7 @@ npm install
 Buat file `.env.local` di root folder proyek dan tambahkan alamat Base URL backend:
 
 ```env
-VITE_API_BASE_URL=https://project-attendace-production.up.railway.app
+VITE_API_BASE_URL=https://project-attendace.onrender.com
 ```
 
 ### 4. Jalankan Development Server
@@ -146,15 +148,19 @@ npm run build
 - [x] Tampilan mobile-responsive
 - [x] Tombol navigasi ke Riwayat, Ajukan Izin, Profil
 - [x] Tombol Admin Panel (khusus HRD)
+- [x] Modal Alasan Telat: Muncul otomatis jika Check-in melewati jam masuk kantor.
+- [x] Modal Alasan Pulang: Muncul otomatis jika Check-out di luar batas jam kerja (terlalu awal / lembur > 1 jam).
+- [x] Info Status Izin Per Jam: Dashboard pintar mendeteksi jika user sedang dalam jam izin, dan menyembunyikan tombol absen sementara.
 
 **Dashboard Admin/HRD**
 
 - [x] Rekap Hari Ini — daftar kehadiran hari ini + kolom keterangan
 - [x] List Karyawan — CRUD user dengan pagination & filter
 - [x] Approval Izin — daftar pengajuan + filter status/jenis + pagination
-- [x] Export Laporan — preview + download PDF & Excel (max periode 3 bulan)
+- [x] Export Laporan — preview + download PDF & Excel (max periode 3 bulan, Logo PT tercetak)
 - [x] Kelola Kantor — CRUD kantor dengan validasi koordinat & jam, badge radius anti-pecah
 - [x] Header dengan tombol Absen (khusus HRD), Profil, Keluar
+- [x] Modal konfirmasi (approve, reject, delete, cancel, late reason, checkout reason)
 
 **Pengajuan Izin**
 
@@ -164,6 +170,9 @@ npm run build
 - [x] Riwayat izin pribadi + status badge (PENDING/APPROVED/REJECTED)
 - [x] Batalkan pengajuan (hanya untuk PENDING)
 - [x] Tampilan alasan penolakan jika REJECTED
+- [x] Fitur Izin Per Jam: Toggle "Seharian Penuh" vs "Beberapa Jam" dengan input jam mulai & selesai.
+- [x] Riwayat Izin Karyawan: Menampilkan status, nama HRD yang menyetujui, waktu diproses, dan tombol Preview Bukti Foto.
+- [x] Riwayat Presensi Karyawan: Dilengkapi tombol Preview Foto Check-in & Check-out (seperti di halaman Admin).
 
 **Profil**
 
@@ -210,20 +219,20 @@ _(Aspirasi jangka panjang — di luar scope proyek ini)_
 ## 📖 Aturan Bisnis Penting
 
 - HRD bisa melakukan absen (check-in/out), tapi tidak bisa self-approve izinnya sendiri.
-- Auto check-out hanya berlaku saat approve izin di tanggal yang sama dengan check-in.
-- Karyawan yang sedang dalam masa izin APPROVED tidak bisa check-in.
+- **Auto check-out hanya berlaku untuk izin seharian penuh** (bukan izin per jam) di tanggal yang sama dengan check-in.
+- **Izin Per Jam**: Karyawan tetap bisa check-in/out di luar jam izin yang disetujui. Sistem hanya memblokir absen jika waktu saat ini berada tepat di dalam rentang jam izin tersebut.
+- **Wajib Alasan**: Karyawan wajib mengisi alasan jika Check-in melewati jam masuk kantor (Terlambat) atau Check-out di luar batas jam kerja (terlalu awal / lembur > 1 jam).
 - Semua tanggal ditampilkan dalam format `DD/MM/YYYY`.
 - Timezone: disimpan UTC, ditampilkan WIB (UTC+7).
 - Kompresi foto di frontend: max 1 MB, resolusi max 1920×1080.
 - Endpoint `/attendances/me` untuk riwayat pribadi, `/attendances/history` untuk rekap semua (admin/HRD).
-- User tidak bisa update profil sendiri (nama, NIK, email, kantor).
-  Hanya bisa ganti password. Perubahan data profil harus lewat Admin.
+- User tidak bisa update profil sendiri (nama, NIK, email, kantor). Hanya bisa ganti password. Perubahan data profil harus lewat Admin.
 
 ## 🌐 URL Deployment
 
 - **Frontend (Vercel):** https://frontend-absensi-iota.vercel.app
-- **Backend (Railway):** https://project-attendace-production.up.railway.app
-- **Swagger API Docs:** https://project-attendace-production.up.railway.app/api-docs
+- **Backend (Render):** https://project-attendace.onrender.com
+- **Swagger API Docs:** https://project-attendace.onrender.com/api-docs
 - **Repo GitHub:** https://github.com/112233qk/Project-Attendance
 
 ## 👨‍💻 Author

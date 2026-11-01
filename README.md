@@ -1,14 +1,14 @@
 # Backend API Sistem Absensi Karyawan
 
-> REST API untuk Sistem Absensi Karyawan berbasis **GPS (Haversine)** & **Verifikasi Foto Real-Time**. Dibangun dengan **Node.js, TypeScript, Express.js, Prisma ORM, dan MySQL**.
+> REST API untuk Sistem Absensi Karyawan berbasis **GPS (Haversine)** & **Verifikasi Foto Real-Time**. Dibangun dengan **Node.js, TypeScript, Express.js, Prisma ORM, dan MySQL**. Di-hosting di **Render** dan **Aiven**.
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Express](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-6.x-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Tests](https://img.shields.io/badge/tests-140%20passed-success)](#-pengujian)
-[![Coverage](https://img.shields.io/badge/coverage-76.39%25-yellowgreen)](#-pengujian)
+[![Tests](https://img.shields.io/badge/tests-119%20passed-success)](#-pengujian)
+[![Coverage](https://img.shields.io/badge/coverage-68.5%25-yellowgreen)](#-pengujian)
 [![License](https://img.shields.io/badge/license-ISC-blue)](LICENSE)
 
 ---
@@ -67,6 +67,9 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 - **Auto check-out saat HRD approve izin di tanggal yang sama (skenario emergency)**
 - **Endpoint `/attendances/me` untuk riwayat milik sendiri (semua role)**
 - **Kolom `keterangan` untuk menandai hari izin / auto check-out**
+- Wajib alasan (Modal) jika Check-in melewati jam masuk kantor.
+- Wajib alasan (Modal) jika Check-out di luar jam kerja (terlalu awal / > 1 jam lembur).
+- Blokir check-in otomatis jika user sedang dalam izin APPROVED (khusus untuk izin per jam, blokir hanya berlaku di dalam rentang jam izin).
 
 ### 📝 Pengajuan Izin/Cuti
 
@@ -77,6 +80,7 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
   - Tolak overlap dengan pengajuan yang sudah `APPROVED`
 - Alur approval: `PENDING` → `APPROVED` / `REJECTED`
 - Reject wajib disertai alasan (`rejectionReason`)
+- Izin Per Jam (Half-Day): Mendukung pengajuan izin untuk beberapa jam tertentu di hari yang sama (contoh: 10:00 - 12:00) dengan validasi overlap berdasarkan jam.
 
 ### 🏢 Manajemen Kantor
 
@@ -99,6 +103,7 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 - Filter by periode, kantor, status kehadiran, user
 - Rekapitulasi otomatis: total karyawan, tepat waktu, terlambat
 - Max periode: 3 bulan per export
+- Header Laporan Profesional: Dilengkapi dengan Logo PT. ARIDEV STUDIO CREATIVE.
 
 ### 🔍 Audit Log
 
@@ -127,7 +132,8 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 | **Language**          | TypeScript 5.x                     |
 | **Framework**         | Express.js 5.x                     |
 | **ORM**               | Prisma 6.x                         |
-| **Database**          | MySQL 8.0+                         |
+| **Hosting**           | Render                             |
+| **Database**          | MySQL 8.0+ (Aiven)                 |
 | **Authentication**    | jsonwebtoken (JWT)                 |
 | **Password Hashing**  | bcrypt                             |
 | **File Upload**       | multer                             |
@@ -213,6 +219,8 @@ erDiagram
         enum jenis
         date tanggal_mulai
         date tanggal_selesai
+        string jam_mulai
+        string jam_selesai
         enum status
     }
     AUDIT_LOGS {
@@ -240,24 +248,36 @@ erDiagram
 <details>
 <summary>Klik untuk melihat struktur folder lengkap</summary>
 
-```text
+````text
 project-attendance/
-├── frontend-absensi/        # Frontend React (dokumentasi terpisah)
 ├── prisma/
 │   ├── migrations/
 │   │   ├── 20260907130403_sync_with_erd/
+│   │   │   └── migration.sql
 │   │   ├── 20260907130815_add_nik_unique/
+│   │   │   └── migration.sql
 │   │   ├── 20260918095317_alpha/
+│   │   │   └── migration.sql
 │   │   ├── 20260923001126_rename_roles_to_user_hrd_admin/
+│   │   │   └── migration.sql
 │   │   ├── 20260923124654_add_audit_log_and_is_active/
+│   │   │   └── migration.sql
 │   │   ├── 20260923125934/
+│   │   │   └── migration.sql
 │   │   ├── 20260924130748_add_rejection_reason_to_permissions/
+│   │   │   └── migration.sql
 │   │   ├── 20261013134116_add_keterangan_to_attendance/
-│   │   └── 20261016085700_remove_foto_profil_from_users/
+│   │   │   └── migration.sql
+│   │   ├── 20261016085700_remove_foto_profil_from_users/
+│   │   │   └── migration.sql
+│   │   ├── 20261031101116_add_jam_to_permissions/
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
 │   └── schema.prisma
 ├── public/
-│   └── uploads/
-│       └── permissions/
+│   ├── uploads/
+│   │   └── permissions/
+│   └── logo.png
 ├── src/
 │   ├── config/
 │   │   ├── multer.ts
@@ -315,10 +335,8 @@ project-attendance/
 ├── LICENSE
 ├── package-lock.json
 ├── package.json
-├── railway.json
 ├── README.md
 └── tsconfig.json
-```
 
 </details>
 
@@ -338,7 +356,7 @@ project-attendance/
 ```bash
 git clone https://github.com/username/project-attendance.git
 cd project-attendance
-```
+````
 
 **2. Install dependencies:**
 
@@ -441,11 +459,11 @@ npm run test:coverage
 
 | Metrik                  | Hasil                      |
 | ----------------------- | -------------------------- |
-| **Test Cases**          | **140 passed / 140 total** |
-| **Statements Coverage** | 76.39%                     |
-| **Branches Coverage**   | 63.35%                     |
-| **Functions Coverage**  | 91.54%                     |
-| **Lines Coverage**      | 76.37%                     |
+| **Test Cases**          | **119 passed / 119 total** |
+| **Statements Coverage** | 68.5%                      |
+| **Branches Coverage**   | 57.25%                     |
+| **Functions Coverage**  | 76.81%                     |
+| **Lines Coverage**      | 68.26%                     |
 
 ### Setup Database Testing
 
@@ -471,8 +489,8 @@ Remove-Item Env:\DATABASE_URL
 Buat file `.env` di root proyek:
 
 ```env
-# Database Connection
-DATABASE_URL="mysql://username:password@localhost:3306/attendance_db"
+# Database Connection (Aiven)
+DATABASE_URL="mysql://username:password@host:port/attendance_db?ssl-mode=REQUIRED"
 
 # JWT Secret (minimal 32 karakter, acak)
 JWT_SECRET=your_super_secret_random_string_here_minimal_32_chars
@@ -520,7 +538,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 - [x] Modul Reports (PDF/Excel)
 - [x] Audit Log (AI-friendly JSON snapshot)
 - [x] Swagger Documentation
-- [x] Automated Testing (140 tests, 76% coverage)
+- [x] Automated Testing (119 tests, 68.5% coverage)
 - [x] Fix timezone (simpan UTC asli, tampil WIB)
 - [x] Kolom `keterangan` di tabel Attendances
 - [x] Blokir check-in saat izin APPROVED
@@ -528,6 +546,9 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 - [x] Isi keterangan otomatis untuk hari izin
 - [x] Endpoint `/attendances/me`
 - [x] Rate limiting (global + auth) & Helmet security headers
+- [x] Fitur Izin Per Jam (Half-Day Leave) + Validasi Overlap Waktu
+- [x] Wajib Alasan Telat Check-in & Check-out di luar jam kerja
+- [x] Integrasi Render (Backend) & Aiven (Database)
 
 ### 💡 Ide Pengembangan Lanjutan
 

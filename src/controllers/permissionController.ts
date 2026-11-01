@@ -91,6 +91,7 @@ export const createPermission = async (req: Request, res: Response) => {
       jamSelesai,
     } = req.body;
 
+    // 1. Validasi Field Wajib
     if (!jenis || !tanggalMulai || !tanggalSelesai || !alasan) {
       return sendResponse(
         res,
@@ -100,7 +101,47 @@ export const createPermission = async (req: Request, res: Response) => {
       );
     }
 
-    // 1. Validasi Format Jam (Jika diisi)
+    // 2. Validasi Jenis Izin
+    if (!["IZIN", "SAKIT", "CUTI"].includes(jenis)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Jenis izin tidak valid. Pilih IZIN, SAKIT, atau CUTI."
+      );
+    }
+
+    // 3. Validasi Alasan (Minimal 5 Karakter)
+    if (typeof alasan !== "string" || alasan.trim().length < 5) {
+      return sendResponse(res, 400, false, "Alasan minimal 5 karakter.");
+    }
+
+    const start = new Date(tanggalMulai);
+    const end = new Date(tanggalSelesai);
+
+    // 4. Validasi Tanggal Mulai > Tanggal Selesai
+    if (start > end) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Tanggal mulai harus lebih awal atau sama dengan tanggal selesai."
+      );
+    }
+
+    // 5. Validasi Tanggal Masa Lalu
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (start < today) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Tanggal mulai tidak boleh di masa lalu."
+      );
+    }
+
+    // 6. Validasi Format Jam (Jika diisi)
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
     if (jamMulai && !timeRegex.test(jamMulai)) {
       return sendResponse(
@@ -127,22 +168,7 @@ export const createPermission = async (req: Request, res: Response) => {
       );
     }
 
-    const start = new Date(tanggalMulai);
-    const end = new Date(tanggalSelesai);
-
-    // 2. Validasi Tanggal Masa Lalu
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (start < today) {
-      return sendResponse(
-        res,
-        400,
-        false,
-        "Tanggal mulai tidak boleh di masa lalu."
-      );
-    }
-
-    // 3. Validasi Bukti untuk SAKIT
+    // 7. Validasi Bukti untuk SAKIT
     if (jenis === "SAKIT" && !req.file) {
       return sendResponse(
         res,
@@ -155,7 +181,7 @@ export const createPermission = async (req: Request, res: Response) => {
       ? `/uploads/permissions/${req.file.filename}`
       : null;
 
-    // 4. Cek Overlap (Bentrok Jadwal)
+    // 8. Cek Overlap (Bentrok Jadwal)
     const existingPermissions = await prisma.permission.findMany({
       where: {
         userId,
@@ -193,7 +219,7 @@ export const createPermission = async (req: Request, res: Response) => {
       );
     }
 
-    // 5. Simpan ke Database
+    // 9. Simpan ke Database
     const permission = await prisma.permission.create({
       data: {
         userId,
