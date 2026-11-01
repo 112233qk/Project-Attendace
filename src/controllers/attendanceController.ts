@@ -39,7 +39,8 @@ const getTodayDate = () => {
 export const checkIn = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { latitude, longitude, metodeMasuk } = req.body;
+    // 1. TAMBAHKAN alasanTelat DARI BODY
+    const { latitude, longitude, metodeMasuk, alasanTelat } = req.body;
 
     if (latitude === undefined || longitude === undefined) {
       return sendResponse(
@@ -102,8 +103,23 @@ export const checkIn = async (req: Request, res: Response) => {
       String(wibTime.getUTCHours()).padStart(2, "0") +
       ":" +
       String(wibTime.getUTCMinutes()).padStart(2, "0");
+
+    // Tentukan status
     const statusMasuk =
       currentTimeString > office.jamMasuk ? "TERLAMBAT" : "TEPAT_WAKTU";
+
+    // 2. VALIDASI WAJIB ALASAN JIKA TERLAMBAT
+    if (
+      statusMasuk === "TERLAMBAT" &&
+      (!alasanTelat || alasanTelat.trim() === "")
+    ) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Anda terlambat. Wajib memberikan alasan keterlambatan."
+      );
+    }
 
     const today = getTodayDate();
     const existingAttendance = await prisma.attendance.findFirst({
@@ -141,6 +157,12 @@ export const checkIn = async (req: Request, res: Response) => {
 
     const fotoMasuk = req.file ? `/uploads/${req.file.filename}` : null;
 
+    // 3. SIMPAN ALASAN TELAT KE KETERANGAN
+    const keterangan =
+      statusMasuk === "TERLAMBAT"
+        ? `Alasan Telat: ${alasanTelat.trim()}`
+        : null;
+
     const attendance = await prisma.attendance.create({
       data: {
         userId,
@@ -151,6 +173,7 @@ export const checkIn = async (req: Request, res: Response) => {
         fotoMasuk,
         statusMasuk,
         metodeMasuk: metodeMasuk || "GPS",
+        keterangan: keterangan, // <-- Simpan alasan
       },
     });
 
@@ -418,7 +441,8 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
         hasCheckedOut: false,
         checkInTime: null,
         checkOutTime: null,
-        activePermission, // Ini sekarang berisi objek atau null
+        activePermission,
+        jamMasukKantor: user?.office?.jamMasuk || "08:00",
         jamPulangKantor: user?.office?.jamPulang || "17:00",
         attendance: null,
       });
@@ -429,7 +453,8 @@ export const getTodayAttendance = async (req: Request, res: Response) => {
       hasCheckedOut: !!attendance.jamPulang,
       checkInTime: formatTime(attendance.jamMasuk),
       checkOutTime: formatTime(attendance.jamPulang),
-      activePermission, // Ini sekarang berisi objek atau null
+      activePermission,
+      jamMasukKantor: user?.office?.jamMasuk || "08:00",
       jamPulangKantor: user?.office?.jamPulang || "17:00",
       attendance,
     });
