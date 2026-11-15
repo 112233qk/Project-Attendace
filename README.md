@@ -1,6 +1,6 @@
 # Backend API Sistem Absensi Karyawan
 
-> REST API untuk Sistem Absensi Karyawan berbasis **GPS (Haversine)** & **Verifikasi Foto Real-Time**. Dibangun dengan **Node.js, TypeScript, Express.js, Prisma ORM, dan MySQL**. Di-hosting di **Render** dan **Aiven**.
+> REST API untuk Sistem Absensi Karyawan berbasis **GPS (Haversine)** & **Verifikasi Foto Real-Time**. Dibangun dengan **Node.js, TypeScript, Express.js, Prisma ORM, dan MySQL**. Di-hosting di **Render** dan **TIDB Cloud**.
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -133,7 +133,7 @@ Sistem mengadopsi konsep **geofencing** dengan radius aman kantor, mencegah prak
 | **Framework**         | Express.js 5.x                     |
 | **ORM**               | Prisma 6.x                         |
 | **Hosting**           | Render                             |
-| **Database**          | MySQL 8.0+ (Aiven)                 |
+| **Database**          | MySQL 8.0+ (TIDB Cloud)            |
 | **Authentication**    | jsonwebtoken (JWT)                 |
 | **Password Hashing**  | bcrypt                             |
 | **File Upload**       | multer                             |
@@ -489,7 +489,7 @@ Remove-Item Env:\DATABASE_URL
 Buat file `.env` di root proyek:
 
 ```env
-# Database Connection (Aiven)
+# Database Connection (TIDB Cloud)
 DATABASE_URL="mysql://username:password@host:port/attendance_db?ssl-mode=REQUIRED"
 
 # JWT Secret (minimal 32 karakter, acak)
@@ -548,7 +548,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 - [x] Rate limiting (global + auth) & Helmet security headers
 - [x] Fitur Izin Per Jam (Half-Day Leave) + Validasi Overlap Waktu
 - [x] Wajib Alasan Telat Check-in & Check-out di luar jam kerja
-- [x] Integrasi Render (Backend) & Aiven (Database)
+- [x] Integrasi Render (Backend) & TIDB Cloud (Database)
 
 ### 💡 Ide Pengembangan Lanjutan
 
